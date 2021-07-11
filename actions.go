@@ -13,10 +13,12 @@ type Action struct {
 
 // YAML-(un)marshallable struct for storing the name of and arguments for an action
 type ActionActivator struct {
-	ActionName  string             `yaml:"action"` // Name of the action to execute
-	Arguments   []interface{}      `yaml:"args"`   // Arguments taken by the action and their type
-	Store       string             `yaml:"store"`  // If set, the result of the action is stored in a field with this name
-	Conditional *ConditionalAction `yaml:"if"`     // If set, this activator is considered an conditional and will instead alter flow of the sequence
+	ActionName  string             `yaml:"action"`        // Name of the action to execute
+	Arguments   []interface{}      `yaml:"args"`          // Arguments taken by the action and their type
+	Store       string             `yaml:"store"`         // If set, the result of the action is stored in a field with this name
+	OnFailure   *ActionSequence    `yaml:"failureSteps"`  // An action sequence to perform if this step fails during execution
+	HaltOnFail  bool               `yaml:"haltOnFailure"` // Whether or not to halt command execution on failure of this step
+	Conditional *ConditionalAction `yaml:"if"`            // If set, this activator is considered an conditional and will instead alter flow of the sequence
 }
 
 // Action sequences are a list of action activations to be performed in sequential order
@@ -87,6 +89,15 @@ func (g *GrugSession) PerformStep(activator ActionActivator, userArgs []string) 
 
 		args, err := ParseArgs(activator.Arguments, userArgs)
 		if err != nil {
+			// The step failed, so perform the failure action sequence
+			if activator.OnFailure != nil {
+				for fStep, newActivator := range *activator.OnFailure {
+					err := g.PerformStep(newActivator, userArgs)
+					if err != nil {
+						g.Log(logError, fmt.Sprint("Failed to execute failure step ", fStep, " after failing step ", step, " - ", err))
+					}
+				}
+			}
 			return errors.New(fmt.Sprint("failed to parse arguments for action ", activator.ActionName, " - ", err))
 		}
 

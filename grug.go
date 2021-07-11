@@ -64,6 +64,10 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 		err := g.PerformStep(activator, userArgs)
 		if err != nil {
 			g.Log(logError, fmt.Sprint("Failed to execute step ", step, " - ", err))
+			if activator.HaltOnFail {
+				g.Log(logInfo, fmt.Sprint("Halting execution of command ", cmd.Name))
+				break
+			}
 		}
 	}
 
