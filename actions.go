@@ -2,8 +2,8 @@ package grug
 
 // Named action that performs some task
 type Action struct {
-	Name string                                             // Name of the action
-	Exec func(*GrugSession, ...interface{}) (string, error) // Function that executes the action
+	Name string                                                  // Name of the action
+	Exec func(*GrugSession, ...interface{}) (interface{}, error) // Function that executes the action
 }
 
 // YAML-(un)marshallable struct for storing the name of and arguments for an action
