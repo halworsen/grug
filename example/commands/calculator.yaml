@@ -2,12 +2,13 @@ name: "Calculator"
 desc: "Perform some simple calculation"
 activators:
   - "calc"
+  - "+"
 steps:
   - action: Plus
     args:
       - "!1"
       - "!2"
-    push: true
+    store: result
   - action: Reply
     args:
-      - "!1 + !2 = !pop"
+      - "!1 + !2 = !result"

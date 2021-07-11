@@ -78,9 +78,13 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 			g.Log(logError, fmt.Sprint("Failed to execute step ", step, " (action: ", activator.ActionName, "), aborting command execution -", err))
 			return
 		}
-		// Store the result of this step on the arg stack
-		if activator.PushResult {
-			PushStepResult(result)
+		// Store the result of this step
+		if activator.Store != "" {
+			err = StoreArg(activator.Store, result)
+			if err != nil {
+				g.Log(logError, fmt.Sprint("Failed to store result of step ", step, " (action: ", activator.ActionName, ") - ", err))
+				return
+			}
 		}
 	}
 }
@@ -124,5 +128,6 @@ func (g *GrugSession) New(cfgPath string) {
 
 // Closes the Discord session associated with the Grug session
 func (g *GrugSession) Close() {
+	g.Log(logInfo, "Closing Discord session")
 	g.DiscordSession.Close()
 }

@@ -7,7 +7,7 @@ steps:
   - action: GetCommandHelp
     args:
       - "!1"
-    push: true
+    store: command_help
   - action: Reply
     args:
-      - "!pop"
+      - "!command_help"
