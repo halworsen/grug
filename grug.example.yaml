@@ -1,0 +1,8 @@
+name: grug
+token: yourdiscordbottokenhere
+invoker: "!g"
+verbose: false
+commands:
+  - "commands/ping.yaml"
+  - "commands/calculator.yaml"
+  - "commands/help.yaml"

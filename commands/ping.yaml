@@ -1,0 +1,11 @@
+name: "Ping"
+desc: "Simple ping command"
+activators:
+  - "ping"
+steps:
+  - action: Reply
+    args:
+      - "Pong!"
+  - action: Reply
+    args:
+      - "Heres the rest of your crud: !1"
