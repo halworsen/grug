@@ -1,14 +1,22 @@
-name: "Calculator"
-desc: "Perform some simple calculation"
-activators:
+name: "Calculator" # Command name
+desc: "Perform some simple calculation" # Command description
+activators: # List of ways to invoke the command
   - "calc"
-  - "+"
-steps:
-  - action: Plus
+steps: # Actions are executed sequentially
+  - action: Plus # Add arg 1 and arg 2 together
     args:
-      - "!1"
-      - "!2"
-    store: result
-  - action: Reply
+      - "!1" # Use the first user supplied argument as an action argument for Plus
+      - "!2" # Use the second user supplied argument as an action argument for Plus
+    store: plus_result # Store the result of the Plus action
+  - action: Reply # Reply in the same channel that the message was sent from
     args:
-      - "!1 + !2 = !result"
+      - "!1 + !2 = !plus_result"
+  - if:
+      condition: int>
+      args:
+        - "!plus_result"
+        - 100
+      true:
+        - action: Reply
+          args:
+            - "wow that number was big"
