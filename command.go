@@ -6,10 +6,10 @@ import (
 )
 
 type Command struct {
-	Name        string            `yaml:"name"`
-	Description string            `yaml:"desc"`
-	Activators  []string          `yaml:"activators"`
-	Steps       []ActionActivator `yaml:"steps"`
+	Name        string         `yaml:"name"`       // Descriptive name of the command
+	Description string         `yaml:"desc"`       // Description of the command
+	Activators  []string       `yaml:"activators"` // A list of ways to invoke the command
+	Steps       ActionSequence `yaml:"steps"`      // The action sequence to perform when the command is invoked
 }
 
 // Takes a list of commands and constructs a map from each command's activators to their respective command

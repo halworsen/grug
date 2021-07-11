@@ -1,6 +1,7 @@
 package grug
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -42,12 +43,17 @@ func init() {
 
 				var mediaMsg *discordgo.Message
 				for _, m := range messages {
-					if len(m.Embeds) > 0 {
+					if len(m.Embeds) > 0 && (m.Embeds[0].Type == discordgo.EmbedTypeImage ||
+						m.Embeds[0].Type == discordgo.EmbedTypeGifv ||
+						m.Embeds[0].Type == discordgo.EmbedTypeVideo) {
 						mediaMsg = m
 						break
 					}
 				}
 
+				if mediaMsg == nil {
+					return nil, errors.New("unable to find any relevant media messages")
+				}
 				return mediaMsg.ID, err
 			},
 		},

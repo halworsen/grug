@@ -49,6 +49,7 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 	// Save as the command being executed for use by any actions
 	g.CurrentCommand = m
 
+	userArgs := parts[2:]
 	// Execute all steps in the command
 	log.Println("[INFO] executing", cmd.Name)
 	for step, activator := range cmd.Steps {
@@ -60,33 +61,13 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 			}
 		}()
 
-		// Gracefully fail for invalid configurations
-		action, present := g.ActionMap[activator.ActionName]
-		if !present {
-			g.Log(logWarn, cmd.Name, "has an invalid activator in step", step, " (action: ", activator.ActionName, "). Aborting execution.")
-			break
-		}
-
-		args, err := ParseArgs(activator.Arguments, parts[2:])
+		err := g.PerformStep(activator, userArgs)
 		if err != nil {
-			g.Log(logError, "Failed to parse step args, aborting command execution -", err)
-			return
-		}
-
-		result, err := action.Exec(g, args...)
-		if err != nil {
-			g.Log(logError, fmt.Sprint("Failed to execute step ", step, " (action: ", activator.ActionName, "), aborting command execution -", err))
-			return
-		}
-		// Store the result of this step
-		if activator.Store != "" {
-			err = StoreArg(activator.Store, result)
-			if err != nil {
-				g.Log(logError, fmt.Sprint("Failed to store result of step ", step, " (action: ", activator.ActionName, ") - ", err))
-				return
-			}
+			g.Log(logError, fmt.Sprint("Failed to execute step ", step, " - ", err))
 		}
 	}
+
+	PurgeArgStore()
 }
 
 // Sets up a new Grug session by parsing its master config, loading commands and establishing a Discord session

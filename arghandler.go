@@ -19,11 +19,12 @@ func init() {
 	storedNameRegexp = regexp.MustCompile("^[a-zA-Z_]+$")
 }
 
-// Checkis if a store name is valid or not
+// Check if a store name is valid or not
 func validateStoredName(name string) bool {
 	return storedNameRegexp.Match([]byte(name))
 }
 
+// Store the given value in the given field in arg store
 func StoreArg(name string, val interface{}) error {
 	if !validateStoredName(name) {
 		return errors.New(fmt.Sprint(name, " is not a valid store name"))
@@ -31,6 +32,11 @@ func StoreArg(name string, val interface{}) error {
 
 	argStore[name] = val
 	return nil
+}
+
+// Purges the arg store by recreating it
+func PurgeArgStore() {
+	argStore = make(map[string]interface{})
 }
 
 // Parses special runtime dependent arguments from configuration-time defined arguments and returns a slice of usable args

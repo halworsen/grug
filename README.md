@@ -4,7 +4,7 @@ Grug is a customizable Discord bot with composable and pluggable commands that a
 
 ## Adding commands
 
-Grug commands are sequential steps of *actions*. Once a command is invoked, Grug will sequentially perform the steps according to the command configuration. If an action returns a value, it may be named and stored for later use. User arguments to the command can also be supplied as action arguments. For example:
+Grug commands are sequential steps of *actions* or *conditionals* called action sequences. Once a command is invoked, Grug will sequentially perform the steps in the action sequence defined by the command configuration. If an action returns a value, it may be named and stored for later use. User arguments to the command can also be supplied as action arguments. For conditionals, two action sequences can be specified to determine behavior. For example:
 
 ```yaml
 name: "Calculator" # Command name
@@ -20,6 +20,19 @@ steps: # Actions are executed sequentially
   - action: Reply # Reply in the same channel that the message was sent from
     args:
       - "!1 + !2 = !plus_result"
+  - if: # Conditionally perform one of two action sequences
+      condition: int> # The name of the conditional action to use for evaluating the condition
+      args: # Operands/arguments to the conditional action
+        - "!plus_result"
+        - 100
+      true: # Action sequence to perform if the condition was true
+        - action: Reply
+          args:
+            - "wow that number was really big"
+      false: # Action sequence to perform if the condition was false
+        - action: Reply
+          args:
+            - "that number was kinda small"
 ```
 
 Look in [commands](./commands) for more examples.
