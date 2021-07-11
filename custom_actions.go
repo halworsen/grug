@@ -2,8 +2,9 @@ package grug
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 func init() {
@@ -32,12 +33,31 @@ func init() {
 			},
 		},
 		{
-			// Computes the result of arg 0 + arg 1
-			Name: "Plus",
+			// super specific but whatever
+			// gets the ID of the latest message in range of a given message ID
+			Name: "GetLastMediaMessageIDAroundID",
 			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
-				a, _ := strconv.Atoi(atostr(args[0]))
-				b, _ := strconv.Atoi(atostr(args[1]))
-				return strconv.Itoa(a + b), nil
+				mID := atostr(args[0])
+				messages, err := g.DiscordSession.ChannelMessages(g.CurrentCommand.ChannelID, 50, mID, "", mID)
+
+				var mediaMsg *discordgo.Message
+				for _, m := range messages {
+					if len(m.Embeds) > 0 {
+						mediaMsg = m
+						break
+					}
+				}
+
+				return mediaMsg.ID, err
+			},
+		},
+		{
+			// Returns the content of a message given its message ID
+			Name: "GetMessageContent",
+			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
+				mID := atostr(args[0])
+				msg, err := g.DiscordSession.ChannelMessage(g.CurrentCommand.ChannelID, mID)
+				return msg.Content, err
 			},
 		},
 	}...)
