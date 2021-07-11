@@ -27,6 +27,14 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 		return
 	}
 
+	// empty invoker is allowed and means commands are invoked directly
+	if g.Config.Invoker == "" {
+		// lil hack, we prepend an empty string to match the (empty) bot invoker
+		paddedParts := make([]string, 0)
+		paddedParts = append(paddedParts, "")
+		parts = append(paddedParts, parts...)
+	}
+
 	// Check if the bot is being invoked
 	if parts[0] != g.Config.Invoker {
 		return
@@ -48,14 +56,14 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 		defer func() {
 			r := recover()
 			if r != nil {
-				g.Log(logError, fmt.Sprint("Panicked out of step ", step, ", command execution was forcefully aborted! - ", r))
+				g.Log(logError, fmt.Sprint("Panicked out of step ", step, " (action: ", activator.ActionName, "), command execution was forcefully aborted! - ", r))
 			}
 		}()
 
 		// Gracefully fail for invalid configurations
 		action, present := g.ActionMap[activator.ActionName]
 		if !present {
-			g.Log(logWarn, cmd.Name, "has an invalid activator in step", step, ". Aborting execution.")
+			g.Log(logWarn, cmd.Name, "has an invalid activator in step", step, " (action: ", activator.ActionName, "). Aborting execution.")
 			break
 		}
 
@@ -67,7 +75,7 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 
 		result, err := action.Exec(g, args...)
 		if err != nil {
-			g.Log(logError, fmt.Sprint("Failed to execute step ", step, ", aborting command execution -", err))
+			g.Log(logError, fmt.Sprint("Failed to execute step ", step, " (action: ", activator.ActionName, "), aborting command execution -", err))
 			return
 		}
 		// Store the result of this step on the arg stack
