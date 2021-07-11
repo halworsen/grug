@@ -16,7 +16,7 @@ steps: # Actions are executed sequentially
     args:
       - "!1" # Use the first user supplied argument as an action argument for Plus
       - "!2" # Use the second user supplied argument as an action argument for Plus
-    pushResult: true # Push the result of the Plus action onto the result stack
+    push: true # Push the result of the Plus action onto the result stack
   - action: Reply # Reply in the same channel that the message was sent from
     args:
       - "!1 + !2 = !pop" # !pop pops one action result off the stack

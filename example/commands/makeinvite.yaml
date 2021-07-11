@@ -1,0 +1,25 @@
+name: "Make Invite"
+desc: "Make a new invite.\nArg 1: max age, Arg 2: max uses"
+activators:
+  - "ninv"
+  - "newinvite"
+steps:
+  - action: GetCommandChannelID
+    push: true
+  - action: ChannelInviteCreate
+    args:
+      - "!pop"
+      - '{"max_age": !1, "max_uses": !2, "temporary": false}'
+    push: true
+  - action: PrettyFormat
+    args:
+      - "!pop"
+    push: true
+  - action: Truncate
+    args:
+      - "!pop"
+      - 2000
+    push: true
+  - action: Reply
+    args:
+      - "invite created: !pop"

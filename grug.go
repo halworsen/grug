@@ -55,7 +55,8 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 		// Gracefully fail for invalid configurations
 		action, present := g.ActionMap[activator.ActionName]
 		if !present {
-			g.Log(logWarn, cmd.Name, "has an invalid activator in step", step, ". Skipping step.")
+			g.Log(logWarn, cmd.Name, "has an invalid activator in step", step, ". Aborting execution.")
+			break
 		}
 
 		args, err := ParseArgs(activator.Arguments, parts[2:])
@@ -66,7 +67,7 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 
 		result, err := action.Exec(g, args...)
 		if err != nil {
-			g.Log(logError, fmt.Sprint("Failed to execute step", step, ", aborting command execution -", err))
+			g.Log(logError, fmt.Sprint("Failed to execute step ", step, ", aborting command execution -", err))
 			return
 		}
 		// Store the result of this step on the arg stack

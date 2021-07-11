@@ -8,9 +8,9 @@ type Action struct {
 
 // YAML-(un)marshallable struct for storing the name of and arguments for an action
 type ActionActivator struct {
-	ActionName string        `yaml:"action"`     // Name of the action to execute
-	Arguments  []interface{} `yaml:"args"`       // Arguments taken by the action and their type
-	PushResult bool          `yaml:"pushResult"` // Whether or not the result of this step should be pushed onto the stack
+	ActionName string        `yaml:"action"` // Name of the action to execute
+	Arguments  []interface{} `yaml:"args"`   // Arguments taken by the action and their type
+	PushResult bool          `yaml:"push"`   // Whether or not the result of this step should be pushed onto the stack
 }
 
 var AllActions []Action

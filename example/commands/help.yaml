@@ -2,11 +2,12 @@ name: "Help"
 desc: "Get help with commands"
 activators:
   - "help"
+  - "?"
 steps:
   - action: GetCommandHelp
     args:
       - "!1"
-    pushResult: true
+    push: true
   - action: Reply
     args:
       - "!pop"

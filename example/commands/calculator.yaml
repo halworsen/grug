@@ -7,7 +7,7 @@ steps:
     args:
       - "!1"
       - "!2"
-    pushResult: true
+    push: true
   - action: Reply
     args:
       - "!1 + !2 = !pop"
