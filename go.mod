@@ -1,4 +1,4 @@
-module main
+module github.com/halworsen/grug
 
 go 1.16
 

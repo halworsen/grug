@@ -2,10 +2,11 @@ package main
 
 import (
 	"log"
-	"main/grug"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/halworsen/grug"
 )
 
 var grugSession *grug.GrugSession
