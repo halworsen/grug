@@ -52,7 +52,7 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 	userArgs := parts[2:]
 	// Execute all steps in the command
 	log.Println("[INFO] executing", cmd.Name)
-	for step, activator := range cmd.Steps {
+	for step, activator := range cmd.Plan {
 		// Recover from any unexpected/unhandled failures
 		defer func() {
 			r := recover()

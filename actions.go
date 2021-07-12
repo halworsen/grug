@@ -16,7 +16,7 @@ type ActionActivator struct {
 	ActionName  string             `yaml:"action"`        // Name of the action to execute
 	Arguments   []interface{}      `yaml:"args"`          // Arguments taken by the action and their type
 	Store       string             `yaml:"store"`         // If set, the result of the action is stored in a field with this name
-	OnFailure   *ActionSequence    `yaml:"failureSteps"`  // An action sequence to perform if this step fails during execution
+	FailurePlan *ActionSequence    `yaml:"failurePlan"`   // An action sequence to perform if this step fails during execution
 	HaltOnFail  bool               `yaml:"haltOnFailure"` // Whether or not to halt command execution on failure of this step
 	Conditional *ConditionalAction `yaml:"if"`            // If set, this activator is considered an conditional and will instead alter flow of the sequence
 }
@@ -95,8 +95,8 @@ func (g *GrugSession) PerformStep(activator ActionActivator, userArgs []string) 
 		result, err := action.Exec(g, args...)
 		if err != nil {
 			// The step failed, so perform the failure action sequence
-			if activator.OnFailure != nil {
-				for fStep, newActivator := range *activator.OnFailure {
+			if activator.FailurePlan != nil {
+				for fStep, newActivator := range *activator.FailurePlan {
 					err := g.PerformStep(newActivator, userArgs)
 					if err != nil {
 						g.Log(logError, fmt.Sprint("Failed to execute failure step ", fStep, " - ", err))

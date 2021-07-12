@@ -2,16 +2,87 @@
 
 Grug is a customizable Discord bot with composable and pluggable commands that are loaded as configurations at runtime.
 
-## Adding commands
+## Grug commands
 
-Grug commands are sequential steps of *actions* or *conditionals* called action sequences. Once a command is invoked, Grug will sequentially perform the steps in the action sequence defined by the command configuration. If an action returns a value, it may be named and stored for later use. User arguments to the command can also be supplied as action arguments. For conditionals, two action sequences can be specified to determine behavior. For example:
+Grug commands consist of 4 parts:
+* A name - A descriptive name of the command
+* A description - A description of the command and how to use it
+* Activators - A list of ways to invoke the command
+* A command plan - A list of *actions* or *conditionals*
+
+When a command is invoked, Grug executes the command plan sequentially.
+
+### Templating
+
+Grug features simple templating to access stored values and user arguments. All templated values start with `!` followed by either a name (for stored values) or a number (for user arguments).
+
+| Example template | User args | Store | Output |
+|------------------|-----------|-------|--------|
+| `Your first arg was !1`| hello world | | `Your first arg was hello` |
+| `Your first arg was !1`| "hello world" | | `Your first arg was hello world` |
+| `!food is !2` | foo good | food: "cake" | `cake is good` |
+
+### Actions
+
+Actions are the base unit of Grug. They are (preferrably simple) tasks that may or may not take arguments, and may or may not produce output. Action output may be stored in named fields, and a failure plan may be specified as a plan to be executed when the action fails.
+
+Actions are implemented in code as reusable components for composing commands.
+
+```yaml
+action: Plus # Action for adding the two arguments together
+args:
+  - "!1" # Use the first user supplied argument as an action argument for Plus
+  - "!2" # Use the second user supplied argument as an action argument for Plus
+store: plus_result # Store the result of the Plus action in the field "plus_result"
+```
+
+### Conditionals
+Conditionals are fancy wrappers for an action execution where the result determines which plan should be executed.
+
+For a list of available conditionals see [conditional_actions.go](./conditional_actions.go)
+
+```yaml
+if:
+  condition: int> # int> is just a normal action that returns a bool
+  args:
+    - !1
+    - 2
+  true: # The plan to execute if user arg #1 > 2
+    ...
+  false: # The plan to execute if user arg #1 <= 2
+    ...
+```
+
+### Failure handling
+If a plan fails to execute normally, indicated by the action returning an error from its `Exec` implementation, and a failure plan is configured, the failure plan is executed in its entirety before the next action in the plan is executed.
+
+The `haltOnFailure` option may also be set to true to abort command execution if the action fails. If a failure plan is specified, it will be executed before the command halts.
+
+```yaml
+- action: GetCommandMessageID
+  store: msgID
+- action: GetLastMediaMessageIDAroundID
+  args:
+    - "!msgID"
+  store: mediaMsgID
+  haltOnFailure: true # Halt command execution if this action fails
+  failurePlan: # The plan to execute if this action fails
+    - action: Reply
+      args:
+        - "Couldn't find any messages with media :/"
+...
+```
+
+### Example
+
+For more examples, see [example/commands](./example/commands).
 
 ```yaml
 name: "Calculator" # Command name
 desc: "Perform some simple calculation" # Command description
 activators: # List of ways to invoke the command
   - "calc"
-steps: # Actions are executed sequentially
+plan: # Actions are executed sequentially according to the plan
   - action: Plus # Add arg 1 and arg 2 together
     args:
       - "!1" # Use the first user supplied argument as an action argument for Plus
@@ -34,5 +105,3 @@ steps: # Actions are executed sequentially
           args:
             - "that number was kinda small"
 ```
-
-Look in [commands](./example/commands) for more examples.

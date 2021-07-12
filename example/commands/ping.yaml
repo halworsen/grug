@@ -2,7 +2,7 @@ name: "Ping"
 desc: "Simple ping command"
 activators:
   - "ping"
-steps:
+plan:
   - action: Reply
     args:
       - "Pong!"

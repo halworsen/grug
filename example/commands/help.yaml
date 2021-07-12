@@ -3,7 +3,7 @@ desc: "Get help with commands"
 activators:
   - "help"
   - "?"
-steps:
+plan:
   - action: GetCommandHelp
     args:
       - "!1"

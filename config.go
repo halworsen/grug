@@ -46,7 +46,7 @@ func (g *GrugSession) LoadCommands() error {
 		}
 
 		g.Commands = append(g.Commands, cmd)
-		g.Log(logInfo, fmt.Sprint("Loaded command \"", cmd.Name, "\" (steps: ", len(cmd.Steps), ", activators: ", len(cmd.Activators), ")"))
+		g.Log(logInfo, fmt.Sprint("Loaded command \"", cmd.Name, "\" (plan length: ", len(cmd.Plan), ", activators: ", len(cmd.Activators), ")"))
 	}
 
 	return nil

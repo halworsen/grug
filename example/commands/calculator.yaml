@@ -2,7 +2,7 @@ name: "Calculator" # Command name
 desc: "Perform some simple calculation" # Command description
 activators: # List of ways to invoke the command
   - "calc"
-steps: # Actions are executed sequentially
+plan: # Actions are executed sequentially
   - action: Plus # Add arg 1 and arg 2 together
     args:
       - "!1" # Use the first user supplied argument as an action argument for Plus

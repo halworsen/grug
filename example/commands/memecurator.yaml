@@ -3,7 +3,7 @@ desc: "Rate the latest meme to be posted.\nHighly ranked memes are automatically
 activators:
   - "rate"
   - "curate"
-steps:
+plan:
   - action: GetCommandMessageID
     store: msgID
   - action: GetLastMediaMessageIDAroundID
@@ -11,7 +11,7 @@ steps:
       - "!msgID"
     store: memeMsgID
     haltOnFailure: true
-    failureSteps:
+    failurePlan:
       - action: Reply
         args:
           - "Couldn't find any recent memes :/"
