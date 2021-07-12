@@ -17,15 +17,18 @@ When a command is invoked using one of its activators, Grug executes the command
 
 ### Templating
 
-Grug features simple templating to access stored values and user arguments. All templated values start with `!` followed by either a name (for stored values), a number (for user arguments) or `*` (for user arg passthrough).
+Grug features simple templating to access stored values and user arguments. All templated values start with `!` followed by either a name (for stored values) or a slice (for user arguments).
 
 | Example template | User args | Store | Result |
 |------------------|-----------|-------|--------|
-| `Your first arg was !1`| hello world | | `Your first arg was hello` |
-| `Your first arg was !1`| "hello world" | | `Your first arg was hello world` |
+| `Your first arg was !0`| hello world | | `Your first arg was hello` |
+| `Your first arg was !0`| "hello world" | | `Your first arg was hello world` |
+| `Your 2nd and 3rd args were: !2:4` | a b c d e | | `Your 2nd and 3rd args were: b c` |
+| `All your args were: !:` | foo bar baz | | `All your args were: foo bar baz` |
+| `Your last arg was: !-1` | hi there | | `Your last arg was: there` |
 | `!food is !2` | foo good | food: "cake" | `cake is good` |
-|`!*` | a b c d | | "a", "b", "c", "d" are passed as arguments |
-|`All args: !*` | a b c d | | `All args: a b c d` |
+| `!:` | a b c d | | "a", "b", "c", "d" are passed as arguments |
+| `!food` | | food: `[[1 2] [3 4]]` | `[[1 2] [3 4]]` is passed as an argument |
 
 ### Actions
 
