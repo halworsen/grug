@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 var argStore map[string]interface{}
 var argRegexp *regexp.Regexp
+var allArgRegexp *regexp.Regexp
 var storedRegexp *regexp.Regexp
 var storedNameRegexp *regexp.Regexp
 
 func init() {
 	argStore = make(map[string]interface{})
-	argRegexp = regexp.MustCompile("!([0-9]+)")
-	storedRegexp = regexp.MustCompile("!([a-zA-Z_]+)")
-	storedNameRegexp = regexp.MustCompile("^[a-zA-Z_]+$")
+	argRegexp = regexp.MustCompile(`!([0-9]+)`)
+	allArgRegexp = regexp.MustCompile(`!\*`)
+	storedRegexp = regexp.MustCompile(`!([a-zA-Z_]+)`)
+	storedNameRegexp = regexp.MustCompile(`^[a-zA-Z_]+$`)
 }
 
 // Check if a store name is valid or not
@@ -55,8 +58,22 @@ func ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]interface{}, error) {
 			}
 		}
 
+		// !* passes all user args, preserving their split
+		matches = allArgRegexp.FindStringSubmatch(arg)
+		if len(matches) > 0 && matches[0] == arg {
+			for _, ua := range usrArgs {
+				finalArgs = append(finalArgs, ua)
+			}
+			continue
+		}
+
+		// !* in any other context is all user args joined by spaces
+		newArg := allArgRegexp.ReplaceAllStringFunc(arg, func(s string) string {
+			return strings.Join(usrArgs, " ")
+		})
+
 		// !stored_name retrieves a stored name from the arg store
-		newArg := storedRegexp.ReplaceAllStringFunc(arg, func(s string) string {
+		newArg = storedRegexp.ReplaceAllStringFunc(newArg, func(s string) string {
 			submatches := storedRegexp.FindStringSubmatch(s)
 			val, ok := argStore[submatches[1]]
 			if ok {

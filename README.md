@@ -17,13 +17,15 @@ When a command is invoked using one of its activators, Grug executes the command
 
 ### Templating
 
-Grug features simple templating to access stored values and user arguments. All templated values start with `!` followed by either a name (for stored values) or a number (for user arguments).
+Grug features simple templating to access stored values and user arguments. All templated values start with `!` followed by either a name (for stored values), a number (for user arguments) or `*` (for user arg passthrough).
 
-| Example template | User args | Store | Output |
+| Example template | User args | Store | Result |
 |------------------|-----------|-------|--------|
 | `Your first arg was !1`| hello world | | `Your first arg was hello` |
 | `Your first arg was !1`| "hello world" | | `Your first arg was hello world` |
 | `!food is !2` | foo good | food: "cake" | `cake is good` |
+|`!*` | a b c d | | "a", "b", "c", "d" are passed as arguments |
+|`All args: !*` | a b c d | | `All args: a b c d` |
 
 ### Actions
 
