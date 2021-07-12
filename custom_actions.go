@@ -66,5 +66,22 @@ func init() {
 				return msg.Content, err
 			},
 		},
+		{
+			// Extracts the URL of the first embed in a message
+			Name: "GetEmbedURL",
+			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
+				mID := atostr(args[0])
+				msg, err := g.DiscordSession.ChannelMessage(g.CurrentCommand.ChannelID, mID)
+				if err != nil {
+					return nil, err
+				}
+
+				if len(msg.Embeds) == 0 {
+					return nil, errors.New("no embeds in given message")
+				}
+
+				return msg.Embeds[0].URL, nil
+			},
+		},
 	}...)
 }

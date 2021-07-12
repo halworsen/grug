@@ -1,0 +1,56 @@
+name: "Meme Curation"
+desc: "Rate the latest meme to be posted.\nHighly ranked memes are automatically posted to the vault."
+activators:
+  - "rate"
+  - "curate"
+steps:
+  - action: GetCommandMessageID
+    store: msgID
+  - action: GetLastMediaMessageIDAroundID
+    args:
+      - "!msgID"
+    store: memeMsgID
+    haltOnFailure: true
+    failureSteps:
+      - action: Reply
+        args:
+          - "Couldn't find any recent memes :/"
+  - action: Load
+    args:
+      - "memeRating-!memeMsgID"
+      - 0
+    store: memeScore
+  - action: Plus
+    args:
+      - "!memeScore"
+      - "!1"
+    store: newScore
+  - action: Store
+    args:
+      - "memeRating-!memeMsgID"
+      - "!newScore"
+    push: true
+  - action: GetCommandGuildID
+    store: gID
+  - action: GetCommandChannelID
+    store: cID
+  - action: Reply
+    args:
+      - "https://discordapp.com/channels/!gID/!cID/!memeMsgID\nRating: !newScore/100"
+  - if:
+      condition: int>=
+      args:
+        - "!newScore"
+        - 100
+      true:
+        - action: GetEmbedURL
+          args:
+            - "!memeMsgID"
+          store: memeURL
+        - action: ChannelMessageSend
+          args:
+            - "541026258478432261"
+            - "!memeURL"
+        - action: Reply
+          args:
+            - "The meme has been stored in the vault"
