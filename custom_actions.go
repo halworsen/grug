@@ -39,13 +39,15 @@ func init() {
 			Name: "GetLastMediaMessageIDAroundID",
 			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
 				mID := atostr(args[0])
-				messages, err := g.DiscordSession.ChannelMessages(g.CurrentCommand.ChannelID, 50, mID, "", mID)
+				messages, err := g.DiscordSession.ChannelMessages(g.CurrentCommand.ChannelID, 100, mID, "", mID)
 
 				var mediaMsg *discordgo.Message
 				for _, m := range messages {
-					if len(m.Embeds) > 0 && (m.Embeds[0].Type == discordgo.EmbedTypeImage ||
-						m.Embeds[0].Type == discordgo.EmbedTypeGifv ||
-						m.Embeds[0].Type == discordgo.EmbedTypeVideo) {
+					// any attachment or any embed of the correct type
+					if len(m.Attachments) > 0 || (len(m.Embeds) > 0 &&
+						(m.Embeds[0].Type == discordgo.EmbedTypeImage ||
+							m.Embeds[0].Type == discordgo.EmbedTypeGifv ||
+							m.Embeds[0].Type == discordgo.EmbedTypeVideo)) {
 						mediaMsg = m
 						break
 					}
@@ -67,8 +69,8 @@ func init() {
 			},
 		},
 		{
-			// Extracts the URL of the first embed in a message
-			Name: "GetEmbedURL",
+			// Extracts the URL of the first media content in a message
+			Name: "GetMediaURL",
 			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
 				mID := atostr(args[0])
 				msg, err := g.DiscordSession.ChannelMessage(g.CurrentCommand.ChannelID, mID)
@@ -76,11 +78,18 @@ func init() {
 					return nil, err
 				}
 
-				if len(msg.Embeds) == 0 {
+				mediaURL := ""
+				if len(msg.Embeds) > 0 {
+					mediaURL = msg.Embeds[0].URL
+				} else if len(msg.Attachments) > 0 {
+					mediaURL = msg.Attachments[0].URL
+				}
+
+				if mediaURL == "" {
 					return nil, errors.New("no embeds in given message")
 				}
 
-				return msg.Embeds[0].URL, nil
+				return mediaURL, nil
 			},
 		},
 	}...)

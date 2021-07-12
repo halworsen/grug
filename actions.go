@@ -43,7 +43,7 @@ func (g *GrugSession) ConstructActionMap() {
 }
 
 func (g *GrugSession) PerformStep(activator ActionActivator, userArgs []string) error {
-	// check which action sequence should be performed
+	// Conditionals are pseudo-actions. This will evaluate a condition and perform steps depending on the result
 	if activator.Conditional != nil {
 		// invalid configurations
 		action, present := g.ActionMap[activator.Conditional.ActionName]
@@ -58,7 +58,7 @@ func (g *GrugSession) PerformStep(activator ActionActivator, userArgs []string) 
 
 		result, err := action.Exec(g, args...)
 		if err != nil {
-			return errors.New(fmt.Sprint("failed to execute conditional action (name: ", activator.Conditional.ActionName, ") - ", err))
+			return errors.New(fmt.Sprint("failed to execute conditional action ", activator.Conditional.ActionName, " - ", err))
 		}
 		// check that we actually got a bool
 		resultBool, ok := result.(bool)
@@ -89,6 +89,11 @@ func (g *GrugSession) PerformStep(activator ActionActivator, userArgs []string) 
 
 		args, err := ParseArgs(activator.Arguments, userArgs)
 		if err != nil {
+			return errors.New(fmt.Sprint("failed to parse arguments for action ", activator.ActionName, " - ", err))
+		}
+
+		result, err := action.Exec(g, args...)
+		if err != nil {
 			// The step failed, so perform the failure action sequence
 			if activator.OnFailure != nil {
 				for fStep, newActivator := range *activator.OnFailure {
@@ -98,13 +103,9 @@ func (g *GrugSession) PerformStep(activator ActionActivator, userArgs []string) 
 					}
 				}
 			}
-			return errors.New(fmt.Sprint("failed to parse arguments for action ", activator.ActionName, " - ", err))
+			return errors.New(fmt.Sprint("failed to execute action ", activator.ActionName, " - ", err))
 		}
 
-		result, err := action.Exec(g, args...)
-		if err != nil {
-			return errors.New(fmt.Sprint("failed to execute action (name: ", activator.ActionName, ") - ", err))
-		}
 		// Store the result of this step
 		if activator.Store != "" {
 			err = StoreArg(activator.Store, result)

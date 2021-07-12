@@ -17,40 +17,58 @@ steps:
           - "Couldn't find any recent memes :/"
   - action: Load
     args:
-      - "memeRating-!memeMsgID"
+      - "memeVaulted-!memeMsgID"
       - 0
-    store: memeScore
-  - action: Plus
-    args:
-      - "!memeScore"
-      - "!1"
-    store: newScore
-  - action: Store
-    args:
-      - "memeRating-!memeMsgID"
-      - "!newScore"
-    push: true
-  - action: GetCommandGuildID
-    store: gID
-  - action: GetCommandChannelID
-    store: cID
-  - action: Reply
-    args:
-      - "https://discordapp.com/channels/!gID/!cID/!memeMsgID\nRating: !newScore/100"
+    store: memeInVault
   - if:
-      condition: int>=
+      condition: ==
       args:
-        - "!newScore"
-        - 100
+        - "!memeInVault"
+        - 0
       true:
-        - action: GetEmbedURL
+        - action: Load
           args:
-            - "!memeMsgID"
-          store: memeURL
-        - action: ChannelMessageSend
+            - "memeRating-!memeMsgID"
+            - 0
+          store: memeScore
+        - action: Plus
           args:
-            - "541026258478432261"
-            - "!memeURL"
+            - "!memeScore"
+            - "!1"
+          store: newScore
+        - action: Store
+          args:
+            - "memeRating-!memeMsgID"
+            - "!newScore"
+        - action: GetCommandGuildID
+          store: gID
+        - action: GetCommandChannelID
+          store: cID
         - action: Reply
           args:
-            - "The meme has been stored in the vault"
+            - "https://discordapp.com/channels/!gID/!cID/!memeMsgID\nVault worthiness rating: !newScore/100"
+        - if:
+            condition: int>=
+            args:
+              - "!newScore"
+              - 100
+            true:
+              - action: GetMediaURL
+                args:
+                  - "!memeMsgID"
+                store: memeURL
+              - action: ChannelMessageSend
+                args:
+                  - "635198159299018777"
+                  - "!memeURL"
+              - action: Store
+                args:
+                  - "memeVaulted-!memeMsgID"
+                  - 1
+              - action: Reply
+                args:
+                  - "The meme has been deemed vault-worthy. Curation is now closed."
+      false:
+        - action: Reply
+          args:
+            - "Curation is closed. This meme is already stored in the vault"

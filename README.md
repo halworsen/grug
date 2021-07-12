@@ -35,4 +35,4 @@ steps: # Actions are executed sequentially
             - "that number was kinda small"
 ```
 
-Look in [commands](./commands) for more examples.
+Look in [commands](./example/commands) for more examples.
