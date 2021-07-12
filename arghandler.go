@@ -24,7 +24,7 @@ func validateStoredName(name string) bool {
 	return storedNameRegexp.Match([]byte(name))
 }
 
-// Store the given value in the given field in arg store
+// StoreArg stores the given value in the given field in an arg store
 func StoreArg(name string, val interface{}) error {
 	if !validateStoredName(name) {
 		return errors.New(fmt.Sprint(name, " is not a valid store name"))
@@ -34,12 +34,12 @@ func StoreArg(name string, val interface{}) error {
 	return nil
 }
 
-// Purges the arg store by recreating it
+// PurgeArgStore clears the arg store by recreating it
 func PurgeArgStore() {
 	argStore = make(map[string]interface{})
 }
 
-// Parses special runtime dependent arguments from configuration-time defined arguments and returns a slice of usable args
+// ParseArgs parses templated values and inserts their respective actual values
 func ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]interface{}, error) {
 	finalArgs := make([]interface{}, 0)
 	for _, arg := range cfgArgs {

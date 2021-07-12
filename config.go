@@ -7,15 +7,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// GrugConfig holds the master configuration values for a Grug session
 type GrugConfig struct {
-	Name     string   `yaml:"name"`     // name of the bot
-	Token    string   `yaml:"token"`    // token for the bot
-	Invoker  string   `yaml:"invoker"`  // the command prefix that invokes grug
-	Commands []string `yaml:"commands"` // a list of paths to command config files
-	Verbose  bool     `yaml:"verbose"`  // verbose logging
+	Name     string   `yaml:"name"`     // Name of the bot
+	Token    string   `yaml:"token"`    // Discord Bot Token to use
+	Invoker  string   `yaml:"invoker"`  // The command prefix that invokes grug
+	Commands []string `yaml:"commands"` // A list of paths to command config files
+	Verbose  bool     `yaml:"verbose"`  // Whether or not to use verbose logging
 }
 
-// Loads the master grug config into the grug session
+// LoadMasterConfig loads the master grug config into the grug session
 func (g *GrugSession) LoadMasterConfig(cfgPath string) error {
 	data, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
@@ -30,7 +31,7 @@ func (g *GrugSession) LoadMasterConfig(cfgPath string) error {
 	return nil
 }
 
-// Loads the commands specified by the master config
+// LoadCommands loads the commands specified by the master config
 func (g *GrugSession) LoadCommands() error {
 	for _, f := range g.Config.Commands {
 		g.Log(logInfo, fmt.Sprint("Loading command from \"", f, "\""))

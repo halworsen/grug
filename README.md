@@ -5,12 +5,13 @@ Grug is a customizable Discord bot with composable and pluggable commands that a
 ## Grug commands
 
 Grug commands consist of 4 parts:
+
 * A name - A descriptive name of the command
 * A description - A description of the command and how to use it
 * Activators - A list of ways to invoke the command
 * A command plan - A list of *actions* or *conditionals*
 
-When a command is invoked, Grug executes the command plan sequentially.
+When a command is invoked using one of its activators, Grug executes the command plan sequentially.
 
 ### Templating
 
@@ -37,6 +38,7 @@ store: plus_result # Store the result of the Plus action in the field "plus_resu
 ```
 
 ### Conditionals
+
 Conditionals are fancy wrappers for an action execution where the result determines which plan should be executed.
 
 For a list of available conditionals see [conditional_actions.go](./conditional_actions.go)
@@ -54,6 +56,7 @@ if:
 ```
 
 ### Failure handling
+
 If a plan fails to execute normally, indicated by the action returning an error from its `Exec` implementation, and a failure plan is configured, the failure plan is executed in its entirety before the next action in the plan is executed.
 
 The `haltOnFailure` option may also be set to true to abort command execution if the action fails. If a failure plan is specified, it will be executed before the command halts.

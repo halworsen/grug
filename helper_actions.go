@@ -1,17 +1,11 @@
 package grug
 
 import (
-	"reflect"
 	"strconv"
-	"unsafe"
 
 	"github.com/aquilax/truncate"
 	"github.com/davecgh/go-spew/spew"
 )
-
-func GetUnexportedField(field reflect.Value) interface{} {
-	return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Interface()
-}
 
 func init() {
 	// config for pretty prints

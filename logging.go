@@ -21,6 +21,7 @@ var logLevelMap = map[int]string{
 	5: "FATAL",
 }
 
+// Log prints a log message tagged with "GRUG" and the log level
 func (g *GrugSession) Log(level int, logMsg ...interface{}) {
 	// Everything error and up is always logged
 	// Everything is always logged before the config is loaded

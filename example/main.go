@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"syscall"
 
 	"github.com/halworsen/grug"
 )
@@ -18,8 +17,8 @@ func main() {
 
 	log.Println("[INFO] Grug is now running (CTRL-C to exit)")
 	// wait for a termination signal
-	sc := make(chan os.Signal)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, os.Interrupt)
 	<-sc
 
 	grugSession.Close()

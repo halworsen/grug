@@ -9,14 +9,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+// GrugSession holds all information relevant to the operation of Grug
 type GrugSession struct {
-	Config         *GrugConfig
-	Commands       []Command
-	Actions        []Action
-	ActivatorMap   map[string]Command
-	ActionMap      map[string]Action
-	DiscordSession *discordgo.Session
-	CurrentCommand *discordgo.MessageCreate
+	Config         *GrugConfig              // The Grug master config
+	Commands       []Command                // All loaded commands
+	Actions        []Action                 // All actions used by Grug
+	ActivatorMap   map[string]Command       // Uniquely maps command name to Command struct
+	ActionMap      map[string]Action        // Uniquely maps action name to Action struct
+	DiscordSession *discordgo.Session       // The underlying Discord session
+	CurrentCommand *discordgo.MessageCreate // The message command that is currently being executed
 }
 
 func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -61,7 +62,7 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 			}
 		}()
 
-		err := g.PerformStep(activator, userArgs)
+		err := g.PerformAction(activator, userArgs)
 		if err != nil {
 			g.Log(logError, fmt.Sprint("Failed to execute step ", step, " - ", err))
 			if activator.HaltOnFail {
@@ -74,7 +75,7 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 	PurgeArgStore()
 }
 
-// Sets up a new Grug session by parsing its master config, loading commands and establishing a Discord session
+// New sets up a Grug session by parsing its master config, loading commands and establishing a Discord session
 func (g *GrugSession) New(cfgPath string) {
 	g.Log(logInfo, "Loading master config from", cfgPath)
 	err := g.LoadMasterConfig(cfgPath)
@@ -111,7 +112,7 @@ func (g *GrugSession) New(cfgPath string) {
 	}
 }
 
-// Closes the Discord session associated with the Grug session
+// Close closes the Discord session associated with the Grug session
 func (g *GrugSession) Close() {
 	g.Log(logInfo, "Closing Discord session")
 	g.DiscordSession.Close()

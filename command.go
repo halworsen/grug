@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// Command represents an invokable Grug command and holds its activators and execution plan
 type Command struct {
 	Name        string         `yaml:"name"`       // Descriptive name of the command
 	Description string         `yaml:"desc"`       // Description of the command
@@ -12,7 +13,7 @@ type Command struct {
 	Plan        ActionSequence `yaml:"plan"`       // The action sequence to perform when the command is invoked
 }
 
-// Takes a list of commands and constructs a map from each command's activators to their respective command
+// ConstructActivatorMap takes a list of commands and constructs a map from each command's activators to their respective command
 // Returns an error if two commands have conflicting activators
 func (g *GrugSession) ConstructActivatorMap() error {
 	g.ActivatorMap = make(map[string]Command)

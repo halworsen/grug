@@ -5,13 +5,13 @@ import (
 	"fmt"
 )
 
-// Named action that performs some task
+// Action is any named task
 type Action struct {
 	Name string                                                  // Name of the action
 	Exec func(*GrugSession, ...interface{}) (interface{}, error) // Function that executes the action
 }
 
-// YAML-(un)marshallable struct for storing the name of and arguments for an action
+// ActionActivator is a YAML-(un)marshallable struct for storing the name of and arguments for an action
 type ActionActivator struct {
 	ActionName  string             `yaml:"action"`        // Name of the action to execute
 	Arguments   []interface{}      `yaml:"args"`          // Arguments taken by the action and their type
@@ -21,10 +21,10 @@ type ActionActivator struct {
 	Conditional *ConditionalAction `yaml:"if"`            // If set, this activator is considered an conditional and will instead alter flow of the sequence
 }
 
-// Action sequences are a list of action activations to be performed in sequential order
+// ActionSequence is a list of action activations to be performed in sequential order
 type ActionSequence []ActionActivator
 
-// A conditional. Performs no action, but determines which action sequence is taken after evaluation
+// ConditionalAction represents a conditional part of an action sequence. Performs no action, but determines which action sequence is taken after evaluation
 type ConditionalAction struct {
 	ActionName    string         `yaml:"condition"` // Name of the action performing the conditional
 	Arguments     []interface{}  `yaml:"args"`      // Arguments taken by the conditional action
@@ -32,9 +32,10 @@ type ConditionalAction struct {
 	FalseSequence ActionSequence `yaml:"false"`     // The action sequence to perform when the condition evaluates to false
 }
 
+// AllActions holds all actions that can be used by Grug
 var AllActions []Action
 
-// Takes a list of actions and constructs a map from each action's name to their respective action struct
+// ConstructActionMap takes a list of actions and constructs a map from each action's name to their respective action struct
 func (g *GrugSession) ConstructActionMap() {
 	g.ActionMap = make(map[string]Action)
 	for _, a := range g.Actions {
@@ -42,75 +43,66 @@ func (g *GrugSession) ConstructActionMap() {
 	}
 }
 
-func (g *GrugSession) PerformStep(activator ActionActivator, userArgs []string) error {
-	// Conditionals are pseudo-actions. This will evaluate a condition and perform steps depending on the result
+// PerformAction performs an action given an activator for the function and any user supplied arguments
+func (g *GrugSession) PerformAction(activator ActionActivator, userArgs []string) error {
+	actionName, args := activator.ActionName, activator.Arguments
 	if activator.Conditional != nil {
-		// invalid configurations
-		action, present := g.ActionMap[activator.Conditional.ActionName]
-		if !present {
-			return errors.New(fmt.Sprint("bad conditional action name: ", activator.ActionName, ""))
-		}
+		actionName = activator.Conditional.ActionName
+		args = activator.Conditional.Arguments
+	}
 
-		args, err := ParseArgs(activator.Conditional.Arguments, userArgs)
-		if err != nil {
-			return errors.New(fmt.Sprint("failed to parse arguments for action ", activator.ActionName, " - ", err))
-		}
+	// invalid configurations
+	action, ok := g.ActionMap[actionName]
+	if !ok {
+		return errors.New(fmt.Sprint("bad conditional action name: ", activator.ActionName, ""))
+	}
 
-		result, err := action.Exec(g, args...)
-		if err != nil {
-			return errors.New(fmt.Sprint("failed to execute conditional action ", activator.Conditional.ActionName, " - ", err))
+	args, err := ParseArgs(args, userArgs)
+	if err != nil {
+		return errors.New(fmt.Sprint("failed to parse arguments for action ", activator.ActionName, " - ", err))
+	}
+
+	result, err := action.Exec(g, args...)
+	if err != nil {
+		// The step failed, so perform the failure action sequence
+		if activator.FailurePlan != nil {
+			for fStep, newActivator := range *activator.FailurePlan {
+				err := g.PerformAction(newActivator, userArgs)
+				if err != nil {
+					g.Log(logError, fmt.Sprint("Failed to execute failure step ", fStep, " - ", err))
+				}
+			}
 		}
-		// check that we actually got a bool
+		return errors.New(fmt.Sprint("failed to execute action ", activator.ActionName, " - ", err))
+	}
+
+	if activator.Conditional == nil {
+		// Store the result of this step
+		if activator.Store != "" {
+			err = StoreArg(activator.Store, result)
+			if err != nil {
+				return errors.New(fmt.Sprint("failed to store result of action ", activator.ActionName, " - ", err))
+			}
+		}
+	} else {
+		// Check that we actually got a bool
 		resultBool, ok := result.(bool)
 		if !ok {
 			return errors.New("conditional action returned non-boolean result")
 		}
 
-		// perform the true/false sequence depending on the result
+		// Perform the true/false sequence depending on the result
 		var newSeq ActionSequence
 		newSeq = activator.Conditional.FalseSequence
 		if resultBool {
 			newSeq = activator.Conditional.TrueSequence
 		}
 
-		// it's okay to have empty action sequences in conditionals
+		// It's okay to have empty action sequences in conditionals
 		for _, newActivator := range newSeq {
-			err := g.PerformStep(newActivator, userArgs)
+			err := g.PerformAction(newActivator, userArgs)
 			if err != nil {
 				return err
-			}
-		}
-	} else {
-		// invalid configurations
-		action, present := g.ActionMap[activator.ActionName]
-		if !present {
-			return errors.New(fmt.Sprint("bad action name: ", activator.ActionName, ""))
-		}
-
-		args, err := ParseArgs(activator.Arguments, userArgs)
-		if err != nil {
-			return errors.New(fmt.Sprint("failed to parse arguments for action ", activator.ActionName, " - ", err))
-		}
-
-		result, err := action.Exec(g, args...)
-		if err != nil {
-			// The step failed, so perform the failure action sequence
-			if activator.FailurePlan != nil {
-				for fStep, newActivator := range *activator.FailurePlan {
-					err := g.PerformStep(newActivator, userArgs)
-					if err != nil {
-						g.Log(logError, fmt.Sprint("Failed to execute failure step ", fStep, " - ", err))
-					}
-				}
-			}
-			return errors.New(fmt.Sprint("failed to execute action ", activator.ActionName, " - ", err))
-		}
-
-		// Store the result of this step
-		if activator.Store != "" {
-			err = StoreArg(activator.Store, result)
-			if err != nil {
-				return errors.New(fmt.Sprint("failed to store result of action ", activator.ActionName, " - ", err))
 			}
 		}
 	}
