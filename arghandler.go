@@ -38,6 +38,8 @@ func getSliceBounds(slice []string, max int) (int, int) {
 		lowerIn, err := strconv.Atoi(slice[0])
 		if lowerIn < 0 {
 			lowerIn += max
+		} else {
+			lowerIn -= 1
 		}
 		if err == nil {
 			lower = lowerIn
@@ -48,6 +50,8 @@ func getSliceBounds(slice []string, max int) (int, int) {
 		upperIn, err := strconv.Atoi(slice[2])
 		if upperIn < 0 {
 			upperIn += max
+		} else {
+			upperIn -= 1
 		}
 		if err == nil {
 			upper = upperIn
