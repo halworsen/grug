@@ -1,4 +1,6 @@
-# grug
+# grug [![Go Report Card](https://goreportcard.com/badge/github.com/halworsen/grug)](https://goreportcard.com/report/github.com/halworsen/grug)
+
+___
 
 Grug is a customizable Discord bot with composable and pluggable commands that are loaded as configurations at runtime.
 
