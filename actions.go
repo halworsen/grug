@@ -94,7 +94,7 @@ func (g *GrugSession) PerformStep(activator ActionActivator, userArgs []string) 
 				for fStep, newActivator := range *activator.OnFailure {
 					err := g.PerformStep(newActivator, userArgs)
 					if err != nil {
-						g.Log(logError, fmt.Sprint("Failed to execute failure step ", fStep, " after failing step ", step, " - ", err))
+						g.Log(logError, fmt.Sprint("Failed to execute failure step ", fStep, " - ", err))
 					}
 				}
 			}
