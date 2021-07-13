@@ -21,8 +21,8 @@ Grug features simple templating to access stored values and user arguments. All 
 
 | Example template | User args | Store | Result |
 |------------------|-----------|-------|--------|
-| `Your first arg was !0`| hello world | | `Your first arg was hello` |
-| `Your first arg was !0`| "hello world" | | `Your first arg was hello world` |
+| `Your first arg was !1`| hello world | | `Your first arg was hello` |
+| `Your first arg was !1`| "hello world" | | `Your first arg was hello world` |
 | `Your 2nd and 3rd args were: !2:4` | a b c d e | | `Your 2nd and 3rd args were: b c` |
 | `All your args were: !:` | foo bar baz | | `All your args were: foo bar baz` |
 | `Your last arg was: !-1` | hi there | | `Your last arg was: there` |
