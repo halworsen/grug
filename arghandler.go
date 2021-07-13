@@ -117,6 +117,7 @@ func ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]interface{}, error) {
 			}
 
 			finalArgs = append(finalArgs, usrArgs[argIdx])
+			continue
 		}
 
 		// !stored_name retrieves a stored name from the arg store

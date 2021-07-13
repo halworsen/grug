@@ -11,12 +11,6 @@ func init() {
 			},
 		},
 		{
-			Name: "==",
-			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
-				return (args[0] == args[1]), nil
-			},
-		},
-		{
 			Name: "not",
 			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
 				b, err := strconv.ParseBool(atostr(args[0]))
