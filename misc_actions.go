@@ -3,6 +3,8 @@ package grug
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -90,6 +92,29 @@ func init() {
 				}
 
 				return mediaURL, nil
+			},
+		},
+		{
+			// Send a HTTP Get request
+			Name: "HTTPGet",
+			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
+				URL, ok := args[0].(string)
+				if !ok {
+					return nil, fmt.Errorf("unable to interpret %v as a string", args[0])
+				}
+
+				resp, err := http.Get(URL)
+				if err != nil {
+					return nil, err
+				}
+				defer resp.Body.Close()
+
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return nil, err
+				}
+
+				return body, nil
 			},
 		},
 	}...)

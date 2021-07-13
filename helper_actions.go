@@ -132,10 +132,42 @@ func init() {
 			},
 		},
 		{
+			// Joins all args as a string with a given delimiter
+			Name: "ConcatenateWith",
+			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
+				argsAsStr := make([]string, 0)
+				delimiter, ok := args[len(args)-1].(string)
+				if !ok {
+					return nil, fmt.Errorf("unable to use %v as concatenation delimiter", args[len(args)-1])
+				}
+				for i := 0; i < len(args)-1; i++ {
+					if argStr, ok := args[i].(string); ok {
+						argsAsStr = append(argsAsStr, argStr)
+					}
+				}
+				return strings.Join(argsAsStr, delimiter), nil
+			},
+		},
+		{
 			// Passes arg[0] back directly
 			Name: "Passthrough",
 			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
 				return args[0], nil
+			},
+		},
+		{
+			// Attempts to unmarshal the 0th arg as JSON
+			Name: "UnmarshalJSON",
+			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
+				asByteSlice, ok := args[0].([]byte)
+				if !ok {
+					return nil, fmt.Errorf("unable to interpret %v as byte slice", args[0])
+				}
+
+				data := make(map[string]interface{})
+				json.Unmarshal(asByteSlice, &data)
+
+				return data, nil
 			},
 		},
 	}...)
