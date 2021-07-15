@@ -18,6 +18,7 @@ type GrugSession struct {
 	ActionMap      map[string]Action        // Uniquely maps action name to Action struct
 	DiscordSession *discordgo.Session       // The underlying Discord session
 	CurrentCommand *discordgo.MessageCreate // The message command that is currently being executed
+	ArgStore       map[string]interface{}   // Args stored after action executions go in here
 }
 
 func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -72,11 +73,13 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 		}
 	}
 
-	PurgeArgStore()
+	g.PurgeArgStore()
 }
 
 // New sets up a Grug session by parsing its master config, loading commands and establishing a Discord session
 func (g *GrugSession) New(cfgPath string) {
+	g.ArgStore = make(map[string]interface{})
+
 	g.Log(logInfo, "Loading master config from", cfgPath)
 	err := g.LoadMasterConfig(cfgPath)
 	if err != nil {

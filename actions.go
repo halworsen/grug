@@ -57,7 +57,7 @@ func (g *GrugSession) PerformAction(activator ActionActivator, userArgs []string
 		return errors.New(fmt.Sprint("bad action name: ", activator.ActionName, ""))
 	}
 
-	args, err := ParseArgs(args, userArgs)
+	args, err := g.ParseArgs(args, userArgs)
 	if err != nil {
 		return errors.New(fmt.Sprint("failed to parse arguments for action ", activator.ActionName, " - ", err))
 	}
@@ -79,7 +79,7 @@ func (g *GrugSession) PerformAction(activator ActionActivator, userArgs []string
 	if activator.Conditional == nil {
 		// Store the result of this step
 		if activator.Store != "" {
-			err = StoreArg(activator.Store, result)
+			err = g.StoreArg(activator.Store, result)
 			if err != nil {
 				return errors.New(fmt.Sprint("failed to store result of action ", activator.ActionName, " - ", err))
 			}

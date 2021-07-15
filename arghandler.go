@@ -3,18 +3,15 @@ package grug
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"regexp"
 	"strconv"
 )
 
-var argStore map[string]interface{}
 var argRegexp *regexp.Regexp
 var storedRegexp *regexp.Regexp
 var storedNameRegexp *regexp.Regexp
 
 func init() {
-	argStore = make(map[string]interface{})
 	// ! alone is not valid but golang regex has no lookahead so we'll validate manually
 	argRegexp = regexp.MustCompile(`!(-?[0-9]+)?(:)?(-?[0-9]+)?(?:\.\.\.)?`)
 	storedRegexp = regexp.MustCompile(`!([a-zA-Z_]+)(?:\.\.\.)?`)
@@ -26,49 +23,14 @@ func validateStoredName(name string) bool {
 	return storedNameRegexp.Match([]byte(name))
 }
 
-// Given an array of the form ["lower" ":" "upper"], returns the lower/upper bounds as ints
-func getSliceBounds(slice []string, max int) (int, int) {
-	lower, upper := 0, max
-
-	if len(slice) < 3 {
-		return lower, upper
-	}
-
-	if slice[0] != "" {
-		lowerIn, err := strconv.Atoi(slice[0])
-		if lowerIn < 0 {
-			lowerIn += max
-		} else {
-			lowerIn -= 1
-		}
-		if err == nil {
-			lower = lowerIn
-		}
-	}
-
-	if slice[1] != "" {
-		upperIn, err := strconv.Atoi(slice[2])
-		if upperIn < 0 {
-			upperIn += max
-		} else {
-			upperIn -= 1
-		}
-		if err == nil {
-			upper = upperIn
-		}
-	}
-
-	return lower, upper
-}
-
 // note: alters the valueMap directly
 // little bit of "replace" abuse. we really just need to run the replace function for every match
-func populateTemplateValueMap(valueMap *map[string]interface{}, arg string, usrArgs []string) {
+func (g *GrugSession) populateTemplateValueMap(valueMap *map[string]interface{}, arg string, usrArgs []string) {
 	// !stored_name retrieves a stored name from the arg store
 	storedRegexp.ReplaceAllStringFunc(arg, func(s string) string {
 		if _, ok := (*valueMap)[s]; !ok {
 			// 1st char is the !
-			(*valueMap)[s] = argStore[s[1:]]
+			(*valueMap)[s] = g.ArgStore[s[1:]]
 		}
 		return s
 	})
@@ -108,36 +70,23 @@ func populateTemplateValueMap(valueMap *map[string]interface{}, arg string, usrA
 	})
 }
 
-// appends a value but "opens up" slices and arrays and adds every element instead of the slice itself
-func appendExpandSlices(slice []interface{}, val interface{}) []interface{} {
-	reflectionVal := reflect.ValueOf(val)
-	if reflectionVal.Kind() == reflect.Slice || reflectionVal.Kind() == reflect.Array {
-		for i := 0; i < reflectionVal.Len(); i++ {
-			slice = append(slice, reflectionVal.Index(i).Interface())
-		}
-	} else {
-		slice = append(slice, val)
-	}
-	return slice
-}
-
 // StoreArg stores the given value in the given field in an arg store
-func StoreArg(name string, val interface{}) error {
+func (g *GrugSession) StoreArg(name string, val interface{}) error {
 	if !validateStoredName(name) {
 		return errors.New(fmt.Sprint(name, " is not a valid store name"))
 	}
 
-	argStore[name] = val
+	g.ArgStore[name] = val
 	return nil
 }
 
 // PurgeArgStore clears the arg store by recreating it
-func PurgeArgStore() {
-	argStore = make(map[string]interface{})
+func (g *GrugSession) PurgeArgStore() {
+	g.ArgStore = make(map[string]interface{})
 }
 
 // ParseArgs parses templated values and inserts their respective actual values
-func ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]interface{}, error) {
+func (g *GrugSession) ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]interface{}, error) {
 	finalArgs := make([]interface{}, 0)
 	templateValueMap := make(map[string]interface{})
 	for _, arg := range cfgArgs {
@@ -149,7 +98,7 @@ func ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]interface{}, error) {
 		}
 
 		// update the templating value map
-		populateTemplateValueMap(&templateValueMap, argAsStr, usrArgs)
+		g.populateTemplateValueMap(&templateValueMap, argAsStr, usrArgs)
 
 		// directly passing args when the template appears alone
 		if match := storedRegexp.FindString(argAsStr); match == argAsStr {
