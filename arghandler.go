@@ -3,9 +3,9 @@ package grug
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 var argStore map[string]interface{}
@@ -16,8 +16,8 @@ var storedNameRegexp *regexp.Regexp
 func init() {
 	argStore = make(map[string]interface{})
 	// ! alone is not valid but golang regex has no lookahead so we'll validate manually
-	argRegexp = regexp.MustCompile(`!(-?[0-9]+)?(:)?(-?[0-9]+)?`)
-	storedRegexp = regexp.MustCompile(`!([a-zA-Z_]+)`)
+	argRegexp = regexp.MustCompile(`!(-?[0-9]+)?(:)?(-?[0-9]+)?(?:\.\.\.)?`)
+	storedRegexp = regexp.MustCompile(`!([a-zA-Z_]+)(?:\.\.\.)?`)
 	storedNameRegexp = regexp.MustCompile(`^[a-zA-Z_]+$`)
 }
 
@@ -61,6 +61,66 @@ func getSliceBounds(slice []string, max int) (int, int) {
 	return lower, upper
 }
 
+// note: alters the valueMap directly
+// little bit of "replace" abuse. we really just need to run the replace function for every match
+func populateTemplateValueMap(valueMap *map[string]interface{}, arg string, usrArgs []string) {
+	// !stored_name retrieves a stored name from the arg store
+	storedRegexp.ReplaceAllStringFunc(arg, func(s string) string {
+		if _, ok := (*valueMap)[s]; !ok {
+			// 1st char is the !
+			(*valueMap)[s] = argStore[s[1:]]
+		}
+		return s
+	})
+
+	// Try to find arguments of the form !1, !2:, !1:5, etc.
+	argRegexp.ReplaceAllStringFunc(arg, func(s string) string {
+		// the regex can match ! alone so we filter that out here
+		if s == "!" {
+			return s
+		}
+
+		if _, ok := (*valueMap)[s]; !ok {
+			submatches := argRegexp.FindStringSubmatch(s)
+			// if it's a slice, add the slice
+			if submatches[2] == ":" {
+				lower, upper := getSliceBounds(submatches[1:], len(usrArgs))
+				(*valueMap)[s] = usrArgs[lower:upper]
+				return s
+			}
+
+			// else, add a specific index
+			argIdx, _ := strconv.Atoi(submatches[1])
+			if argIdx < 0 {
+				argIdx += len(usrArgs)
+			} else {
+				argIdx -= 1
+			}
+
+			if argIdx < 0 || argIdx > len(usrArgs)-1 {
+				panic(fmt.Sprint("arg index out of bounds for configured user arg ", submatches[1]))
+			}
+
+			(*valueMap)[s] = usrArgs[argIdx]
+		}
+
+		return s
+	})
+}
+
+// appends a value but "opens up" slices and arrays and adds every element instead of the slice itself
+func appendExpandSlices(slice []interface{}, val interface{}) []interface{} {
+	reflectionVal := reflect.ValueOf(val)
+	if reflectionVal.Kind() == reflect.Slice || reflectionVal.Kind() == reflect.Array {
+		for i := 0; i < reflectionVal.Len(); i++ {
+			slice = append(slice, reflectionVal.Index(i).Interface())
+		}
+	} else {
+		slice = append(slice, val)
+	}
+	return slice
+}
+
 // StoreArg stores the given value in the given field in an arg store
 func StoreArg(name string, val interface{}) error {
 	if !validateStoredName(name) {
@@ -79,84 +139,46 @@ func PurgeArgStore() {
 // ParseArgs parses templated values and inserts their respective actual values
 func ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]interface{}, error) {
 	finalArgs := make([]interface{}, 0)
+	templateValueMap := make(map[string]interface{})
 	for _, arg := range cfgArgs {
-		arg := atostr(arg)
-
-		// special case: !stored_name alone can pass arbitrary values
-		matches := storedRegexp.FindStringSubmatch(arg)
-		if len(matches) > 0 && matches[0] == arg {
-			val, ok := argStore[matches[1]]
-			if ok {
-				finalArgs = append(finalArgs, val)
-				continue
-			}
-		}
-
-		// special case: user arg template alone can pass the slice preserving the split
-		matches = argRegexp.FindStringSubmatch(arg)
-		if len(matches) > 0 && matches[0] == arg && arg != "!" {
-			// its a slice
-			if matches[2] == ":" {
-				// get the bounds and add all of the args according to the slice bounds
-				lower, upper := getSliceBounds(matches[1:], len(usrArgs))
-				for i := lower; i < upper; i++ {
-					finalArgs = append(finalArgs, usrArgs[i])
-				}
-				continue
-			}
-
-			argIdx, _ := strconv.Atoi(matches[1])
-			if argIdx < 0 {
-				argIdx += len(usrArgs)
-			} else {
-				argIdx -= 1
-			}
-
-			if argIdx < 0 || argIdx > len(usrArgs)-1 {
-				panic(fmt.Sprint("arg index out of bounds for configured user arg ", matches[1]))
-			}
-
-			finalArgs = append(finalArgs, usrArgs[argIdx])
+		// if it's not a string there's no templating to do
+		argAsStr, ok := arg.(string)
+		if !ok {
+			finalArgs = append(finalArgs, arg)
 			continue
 		}
 
-		// !stored_name retrieves a stored name from the arg store
-		newArg := storedRegexp.ReplaceAllStringFunc(arg, func(s string) string {
-			submatches := storedRegexp.FindStringSubmatch(s)
-			val, ok := argStore[submatches[1]]
-			if ok {
-				return atostr(val)
+		// update the templating value map
+		populateTemplateValueMap(&templateValueMap, argAsStr, usrArgs)
+
+		// directly passing args when the template appears alone
+		if match := storedRegexp.FindString(argAsStr); match == argAsStr {
+			if match[len(match)-3:] == "..." {
+				finalArgs = appendExpandSlices(finalArgs, templateValueMap[argAsStr])
 			}
-			return s
+			finalArgs = append(finalArgs, templateValueMap[argAsStr])
+			continue
+		}
+		if match := argRegexp.FindString(argAsStr); argAsStr != "!" && match == argAsStr {
+			if match[len(match)-3:] == "..." {
+				finalArgs = appendExpandSlices(finalArgs, templateValueMap[argAsStr])
+			}
+			finalArgs = append(finalArgs, templateValueMap[argAsStr])
+			continue
+		}
+
+		argAsStr = storedRegexp.ReplaceAllStringFunc(argAsStr, func(s string) string {
+			return atostr(templateValueMap[s])
 		})
 
-		// Try to find arguments of the form !1, !2:, !1:5, etc. and replace them with their respective user args
-		newArg = argRegexp.ReplaceAllStringFunc(newArg, func(s string) string {
-			submatches := argRegexp.FindStringSubmatch(s)
-			if submatches[0] == "!" {
+		argAsStr = argRegexp.ReplaceAllStringFunc(argAsStr, func(s string) string {
+			if s == "!" {
 				return s
 			}
-
-			if submatches[2] == ":" {
-				lower, upper := getSliceBounds(submatches[1:], len(usrArgs))
-				return strings.Join(usrArgs[lower:upper], " ")
-			}
-
-			argIdx, _ := strconv.Atoi(submatches[1])
-			if argIdx < 0 {
-				argIdx += len(usrArgs)
-			} else {
-				argIdx -= 1
-			}
-
-			if argIdx < 0 || argIdx > len(usrArgs)-1 {
-				panic(fmt.Sprint("arg index out of bounds for configured user arg ", submatches[1]))
-			}
-
-			return usrArgs[argIdx]
+			return atostr(templateValueMap[s])
 		})
 
-		finalArgs = append(finalArgs, newArg)
+		finalArgs = append(finalArgs, argAsStr)
 	}
 	return finalArgs, nil
 }

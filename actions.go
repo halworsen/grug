@@ -54,7 +54,7 @@ func (g *GrugSession) PerformAction(activator ActionActivator, userArgs []string
 	// invalid configurations
 	action, ok := g.ActionMap[actionName]
 	if !ok {
-		return errors.New(fmt.Sprint("bad conditional action name: ", activator.ActionName, ""))
+		return errors.New(fmt.Sprint("bad action name: ", activator.ActionName, ""))
 	}
 
 	args, err := ParseArgs(args, userArgs)

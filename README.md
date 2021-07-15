@@ -15,16 +15,51 @@ Grug commands consist of 4 parts:
 
 When a command is invoked using one of its activators, Grug executes the command plan sequentially.
 
+### Example
+
+For more examples, see [example/commands](./example/commands).
+
+```yaml
+name: "Calculator" # Command name
+desc: "Perform some simple calculation" # Command description
+activators: # List of ways to invoke the command
+  - "calc"
+plan: # Actions are executed sequentially according to the plan
+  - action: Plus # Add arg 1 and arg 2 together
+    args:
+      - "!1" # Use the first user supplied argument as an action argument for Plus
+      - "!2" # Use the second user supplied argument as an action argument for Plus
+    store: plus_result # Store the result of the Plus action
+  - action: Reply # Reply in the same channel that the message was sent from
+    args:
+      - "!1 + !2 = !plus_result"
+  - if: # Conditionally perform one of two action sequences
+      condition: int> # The name of the conditional action to use for evaluating the condition
+      args: # Operands/arguments to the conditional action
+        - "!plus_result"
+        - 100
+      true: # Action sequence to perform if the condition was true
+        - action: Reply
+          args:
+            - "wow that number was really big"
+      false: # Action sequence to perform if the condition was false
+        - action: Reply
+          args:
+            - "that number was kinda small"
+```
+
 ### Templating
 
-Grug features simple templating to access stored values and user arguments. All templated values start with `!` followed by either a name (for stored values) or a slice (for user arguments).
+Grug features simple templating to access stored values and user arguments. All templated values start with `!` followed by either a name (for stored values) or a slice (for user arguments). Ending the template with `...` causes slice values to be unpacked.
 
 | Example template | User args | Store | Result |
 |------------------|-----------|-------|--------|
 | `Your first arg was !1`| hello world | | `Your first arg was hello` |
 | `Your first arg was !1`| "hello world" | | `Your first arg was hello world` |
-| `Your 2nd and 3rd args were: !2:4` | a b c d e | | `Your 2nd and 3rd args were: b c` |
-| `All your args were: !:` | foo bar baz | | `All your args were: foo bar baz` |
+| `Your 2nd and 3rd args were: !2:4` | a b c d e | | `Your 2nd and 3rd args were: [b c]` |
+| `Your 2nd and 3rd args were: !2:4...` | a b c d e | | `Your 2nd and 3rd args were: b c` |
+| `All your args were: !:` | foo bar baz | | `All your args were: [foo bar baz]` |
+| `All your args were: !:...` | foo bar baz | | `All your args were: foo bar baz` |
 | `Your last arg was: !-1` | hi there | | `Your last arg was: there` |
 | `!food is !2` | foo good | food: "cake" | `cake is good` |
 | `!:` | a b c d | | "a", "b", "c", "d" are passed as arguments |
@@ -81,37 +116,4 @@ The `haltOnFailure` option may also be set to true to abort command execution if
       args:
         - "Couldn't find any messages with media :/"
 ...
-```
-
-### Example
-
-For more examples, see [example/commands](./example/commands).
-
-```yaml
-name: "Calculator" # Command name
-desc: "Perform some simple calculation" # Command description
-activators: # List of ways to invoke the command
-  - "calc"
-plan: # Actions are executed sequentially according to the plan
-  - action: Plus # Add arg 1 and arg 2 together
-    args:
-      - "!1" # Use the first user supplied argument as an action argument for Plus
-      - "!2" # Use the second user supplied argument as an action argument for Plus
-    store: plus_result # Store the result of the Plus action
-  - action: Reply # Reply in the same channel that the message was sent from
-    args:
-      - "!1 + !2 = !plus_result"
-  - if: # Conditionally perform one of two action sequences
-      condition: int> # The name of the conditional action to use for evaluating the condition
-      args: # Operands/arguments to the conditional action
-        - "!plus_result"
-        - 100
-      true: # Action sequence to perform if the condition was true
-        - action: Reply
-          args:
-            - "wow that number was really big"
-      false: # Action sequence to perform if the condition was false
-        - action: Reply
-          args:
-            - "that number was kinda small"
 ```
