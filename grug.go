@@ -56,12 +56,14 @@ func (g *GrugSession) grugMessageHandler(s *discordgo.Session, m *discordgo.Mess
 	log.Println("[INFO] executing", cmd.Name)
 	for step, activator := range cmd.Plan {
 		// Recover from any unexpected/unhandled failures
-		defer func() {
-			r := recover()
-			if r != nil {
-				g.Log(logError, fmt.Sprint("Panicked out of step ", step, " (action: ", activator.ActionName, "), command execution was forcefully aborted! - ", r))
-			}
-		}()
+		if !g.Config.HardError {
+			defer func() {
+				r := recover()
+				if r != nil {
+					g.Log(logError, fmt.Sprint("Panicked out of step ", step, " (action: ", activator.ActionName, "), command execution was forcefully aborted! - ", r))
+				}
+			}()
+		}
 
 		err := g.PerformAction(activator, userArgs)
 		if err != nil {

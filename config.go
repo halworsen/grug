@@ -9,11 +9,12 @@ import (
 
 // GrugConfig holds the master configuration values for a Grug session
 type GrugConfig struct {
-	Name     string   `yaml:"name"`     // Name of the bot
-	Token    string   `yaml:"token"`    // Discord Bot Token to use
-	Invoker  string   `yaml:"invoker"`  // The command prefix that invokes grug
-	Commands []string `yaml:"commands"` // A list of paths to command config files
-	Verbose  bool     `yaml:"verbose"`  // Whether or not to use verbose logging
+	Name      string   `yaml:"name"`      // Name of the bot
+	Token     string   `yaml:"token"`     // Discord Bot Token to use
+	Invoker   string   `yaml:"invoker"`   // The command prefix that invokes grug
+	Commands  []string `yaml:"commands"`  // A list of paths to command config files
+	Verbose   bool     `yaml:"verbose"`   // Whether or not to use verbose logging
+	HardError bool     `yaml:"hardError"` // If set to true, Grug will crash on panics in commands
 }
 
 // LoadMasterConfig loads the master grug config into the grug session
