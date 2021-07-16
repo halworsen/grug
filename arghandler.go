@@ -109,7 +109,7 @@ func (g *GrugSession) ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]inte
 			continue
 		}
 		if match := argRegexp.FindString(argAsStr); argAsStr != "!" && match == argAsStr {
-			if match[len(match)-3:] == "..." {
+			if len(match) >= 3 && match[len(match)-3:] == "..." {
 				finalArgs = appendExpandSlices(finalArgs, templateValueMap[argAsStr])
 			}
 			finalArgs = append(finalArgs, templateValueMap[argAsStr])
