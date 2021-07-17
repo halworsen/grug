@@ -1,0 +1,8 @@
+name: grug
+token: yourbottokenhere
+invoker: "!g"
+commands:
+  - "/etc/grug/commands/help.yaml"
+  - "/etc/grug/commands/listcommands.yaml"
+  - "/etc/grug/commands/memecurator.yaml"
+verbose: true

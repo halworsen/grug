@@ -1,0 +1,74 @@
+name: "Meme Curation"
+desc: "Rate the latest meme to be posted.\nHighly ranked memes are automatically posted to the vault."
+activators:
+  - "rate"
+  - "curate"
+plan:
+  - action: GetCommandMessageID
+    store: msgID
+  - action: GetLastMediaMessageIDAroundID
+    args:
+      - "!msgID"
+    store: memeMsgID
+    haltOnFailure: true
+    failurePlan:
+      - action: Reply
+        args:
+          - "Couldn't find any recent memes :/"
+  - action: Load
+    args:
+      - "memeVaulted-!memeMsgID"
+      - 0
+    store: memeInVault
+  - if:
+      condition: ==
+      args:
+        - "!memeInVault"
+        - 0
+      true:
+        - action: Load
+          args:
+            - "memeRating-!memeMsgID"
+            - 0
+          store: memeScore
+        - action: Plus
+          args:
+            - "!memeScore"
+            - "!1"
+          store: newScore
+        - action: Store
+          args:
+            - "memeRating-!memeMsgID"
+            - "!newScore"
+        - action: GetCommandGuildID
+          store: gID
+        - action: GetCommandChannelID
+          store: cID
+        - action: Reply
+          args:
+            - "https://discordapp.com/channels/!gID/!cID/!memeMsgID\nVault worthiness rating: !newScore/100"
+        - if:
+            condition: int>=
+            args:
+              - "!newScore"
+              - 100
+            true:
+              - action: GetMediaURL
+                args:
+                  - "!memeMsgID"
+                store: memeURL
+              - action: ChannelMessageSend
+                args:
+                  - "635198159299018777"
+                  - "!memeURL"
+              - action: Store
+                args:
+                  - "memeVaulted-!memeMsgID"
+                  - 1
+              - action: Reply
+                args:
+                  - "The meme has been deemed vault-worthy. Curation is now closed."
+      false:
+        - action: Reply
+          args:
+            - "Curation is closed. This meme is already stored in the vault"

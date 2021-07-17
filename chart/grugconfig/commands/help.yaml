@@ -1,0 +1,13 @@
+name: "Help"
+desc: "Get help with commands"
+activators:
+  - "help"
+  - "?"
+plan:
+  - action: GetCommandHelp
+    args:
+      - "!1"
+    store: command_help
+  - action: Reply
+    args:
+      - "!command_help"

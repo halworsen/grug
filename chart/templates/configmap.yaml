@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-commands
+data:
+{{- $files := .Files -}}
+{{- $globPat := printf "%s/*.yaml" (.Values.config.commands | trimSuffix "/") }}
+{{ (.Files.Glob $globPat).AsConfig | indent 2 }}

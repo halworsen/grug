@@ -1,0 +1,8 @@
+image:
+  repository: grugcrrepo
+  tag: ""
+  pullPolicy: IfNotPresent
+
+config:
+  masterConfig: "grugconfig/grug.yaml"
+  commands: "grugconfig/commands/"

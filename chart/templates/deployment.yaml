@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "grug.fullname" . }}
+  labels:
+    {{- include "grug.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "grug.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "grug.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-config-volume
+              mountPath: "/etc/grug"
+            - name: {{ .Release.Name }}-command-volume
+              mountPath: "/etc/grug/commands"
+          ports:
+            - name: http
+              containerPort: 5700
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+      volumes:
+        - name: {{ .Release.Name }}-config-volume
+          secret:
+            secretName: {{ .Release.Name }}-master-config
+        - name: {{ .Release.Name }}-command-volume
+          configMap:
+            name: {{ .Release.Name }}-commands
