@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 var argRegexp *regexp.Regexp
@@ -97,34 +98,48 @@ func (g *GrugSession) ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]inte
 			continue
 		}
 
-		// update the templating value map
+		// update the templating value map so each template maps to its value
 		g.populateTemplateValueMap(&templateValueMap, argAsStr, usrArgs)
 
-		// directly passing args when the template appears alone
-		if match := storedRegexp.FindString(argAsStr); match == argAsStr {
-			if match[len(match)-3:] == "..." {
-				finalArgs = appendExpandSlices(finalArgs, templateValueMap[argAsStr])
+		// directly pass args when the template appears alone
+		argAdder := func(match string) {
+			if len(match) > 3 && match[len(match)-3:] == "..." {
+				fMapSlice(templateValueMap[argAsStr], func(arg interface{}) {
+					finalArgs = append(finalArgs, arg)
+				})
+			} else {
+				finalArgs = append(finalArgs, templateValueMap[argAsStr])
 			}
-			finalArgs = append(finalArgs, templateValueMap[argAsStr])
+		}
+
+		if match := storedRegexp.FindString(argAsStr); match == argAsStr {
+			argAdder(match)
 			continue
 		}
 		if match := argRegexp.FindString(argAsStr); argAsStr != "!" && match == argAsStr {
-			if len(match) >= 3 && match[len(match)-3:] == "..." {
-				finalArgs = appendExpandSlices(finalArgs, templateValueMap[argAsStr])
-			}
-			finalArgs = append(finalArgs, templateValueMap[argAsStr])
+			argAdder(match)
 			continue
 		}
 
-		argAsStr = storedRegexp.ReplaceAllStringFunc(argAsStr, func(s string) string {
+		// Replaces a string match s with the string representation of that arg
+		// If suffixed with "...", s is assumed to be the template for a slice, and every slice element's string representation is joined using " "
+		stringReplacer := func(s string) string {
+			if len(s) > 3 && s[len(s)-3:] == "..." {
+				asStrSlice := make([]string, 0)
+				fMapSlice(templateValueMap[s], func(arg interface{}) {
+					asStrSlice = append(asStrSlice, arg.(string))
+				})
+				return strings.Join(asStrSlice, " ")
+			}
 			return atostr(templateValueMap[s])
-		})
+		}
 
+		argAsStr = storedRegexp.ReplaceAllStringFunc(argAsStr, stringReplacer)
 		argAsStr = argRegexp.ReplaceAllStringFunc(argAsStr, func(s string) string {
 			if s == "!" {
 				return s
 			}
-			return atostr(templateValueMap[s])
+			return stringReplacer(s)
 		})
 
 		finalArgs = append(finalArgs, argAsStr)

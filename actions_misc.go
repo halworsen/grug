@@ -25,6 +25,17 @@ func init() {
 			},
 		},
 		{
+			// Puts together a list of all loaded commands
+			Name: "GetCommandList",
+			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
+				listMsg := "**Loaded commands**\n"
+				for _, cmd := range g.Commands {
+					listMsg += fmt.Sprintf("%s: %s\n", cmd.Name, strings.Join(cmd.Activators, ", "))
+				}
+				return listMsg, nil
+			},
+		},
+		{
 			// Replies in the same channel as the command was executed in with whatever is in arg 0
 			Name: "Reply",
 			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {

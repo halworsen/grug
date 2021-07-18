@@ -12,17 +12,14 @@ func atostr(a interface{}) string {
 	return fmt.Sprintf("%v", a)
 }
 
-// appends a value but "opens up" slices and arrays and adds every element instead of the slice itself
-func appendExpandSlices(slice []interface{}, val interface{}) []interface{} {
+// Applies a function to every element of a value assumed to be a slice
+func fMapSlice(val interface{}, mapFunc func(interface{})) {
 	reflectionVal := reflect.ValueOf(val)
 	if reflectionVal.Kind() == reflect.Slice || reflectionVal.Kind() == reflect.Array {
 		for i := 0; i < reflectionVal.Len(); i++ {
-			slice = append(slice, reflectionVal.Index(i).Interface())
+			mapFunc(reflectionVal.Index(i).Interface())
 		}
-	} else {
-		slice = append(slice, val)
 	}
-	return slice
 }
 
 // Given an array of the form ["lower" ":" "upper"], returns the lower/upper bounds as ints
