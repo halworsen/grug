@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // anything to string
@@ -57,4 +58,40 @@ func getSliceBounds(slice []string, max int) (int, int) {
 	}
 
 	return lower, upper
+}
+
+// fieldAccess accesses fields of an object according to a plan
+// Supports both indexing and named access. E.g. FieldA.0.B would access args[0].FieldA[0].B
+func fieldAccess(object interface{}, accessPattern string) (interface{}, error) {
+	if accessPattern == "." {
+		return object, nil
+	}
+	indexPlan := strings.Split(atostr(accessPattern), ".")
+
+	var value interface{}
+	for n, field := range indexPlan {
+		if n == 0 {
+			value = object
+		}
+
+		idx, err := strconv.Atoi(field)
+		if err == nil {
+			valAsSlice, ok := value.([]interface{})
+			if !ok {
+				return nil, fmt.Errorf("%v is not accessible by index", value)
+			}
+			if idx > len(valAsSlice)-1 {
+				return nil, fmt.Errorf("%d is out of range for slice %v with length %d", idx, value, len(valAsSlice))
+			}
+			value = valAsSlice[idx]
+		} else {
+			valAsMap, ok := value.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("%v is not accessible by name %s", value, field)
+			}
+			value = valAsMap[field]
+		}
+	}
+
+	return value, nil
 }

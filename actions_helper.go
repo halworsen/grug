@@ -8,6 +8,8 @@ import (
 
 	"github.com/aquilax/truncate"
 	"github.com/davecgh/go-spew/spew"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 func init() {
@@ -77,34 +79,11 @@ func init() {
 			// E.g. FieldA.0.B would access args[0].FieldA[0].B
 			Name: "FieldAccess",
 			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
-				if args[1] == "." {
-					return args[0], nil
+				asStr, ok := args[1].(string)
+				if !ok {
+					return nil, fmt.Errorf("unable to interpret %v as string", args[0])
 				}
-				indexPlan := strings.Split(atostr(args[1]), ".")
-
-				var value interface{}
-				for n, field := range indexPlan {
-					if n == 0 {
-						value = args[0]
-					}
-
-					idx, err := strconv.Atoi(field)
-					if err == nil {
-						valAsSlice, ok := value.([]interface{})
-						if !ok {
-							return nil, fmt.Errorf("%v is not accessible by index", value)
-						}
-						value = valAsSlice[idx]
-					} else {
-						valAsMap, ok := value.(map[string]interface{})
-						if !ok {
-							return nil, fmt.Errorf("%v is not accessible by name %s", value, field)
-						}
-						value = valAsMap[field]
-					}
-				}
-
-				return value, nil
+				return fieldAccess(args[0], asStr)
 			},
 		},
 		{
@@ -168,6 +147,28 @@ func init() {
 				json.Unmarshal(asByteSlice, &data)
 
 				return data, nil
+			},
+		},
+		{
+			// Attempts to unmarshal the 0th arg as JSON
+			Name: "FormatIntCommas",
+			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
+				var val int
+				switch t := args[0].(type) {
+				case float32:
+					val = int(t)
+				case float64:
+					val = int(t)
+				case int:
+					val = t
+				default:
+					return nil, fmt.Errorf("unable to interpret %v as a number", args[0])
+				}
+
+				p := message.NewPrinter(language.English)
+				formatted := p.Sprintf("%d", val)
+
+				return formatted, nil
 			},
 		},
 	}...)
