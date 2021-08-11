@@ -2,6 +2,7 @@ package grug
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,7 @@ func init() {
 			// Send a HTTP Get request
 			// If a second arg is provided it will be used as the request body
 			Name: "HTTPGet",
-			Exec: func(g *GrugSession, args ...interface{}) (interface{}, error) {
+			Exec: func(g *GrugSession, ctx context.Context, args ...interface{}) (interface{}, error) {
 				url, ok := args[0].(string)
 				if !ok {
 					return nil, fmt.Errorf("unable to interpret %v as a string", args[0])

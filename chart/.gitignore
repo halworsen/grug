@@ -1,0 +1,4 @@
+grugconfig/commands/*.yaml
+!grugconfig/commands/help.yaml
+!grugconfig/commands/listcommands.yaml
+!grugconfig/commands/memecurator.yaml

@@ -18,7 +18,7 @@ type GrugConfig struct {
 }
 
 // LoadMasterConfig loads the master grug config into the grug session
-func (g *GrugSession) LoadMasterConfig(cfgPath string) error {
+func (g *GrugSession) loadMasterConfig(cfgPath string) error {
 	data, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func (g *GrugSession) LoadMasterConfig(cfgPath string) error {
 }
 
 // LoadCommands loads the commands specified by the master config
-func (g *GrugSession) LoadCommands() error {
+func (g *GrugSession) loadCommands() error {
 	for _, f := range g.Config.Commands {
 		g.Log(logInfo, fmt.Sprint("Loading command from \"", f, "\""))
 		data, err := ioutil.ReadFile(f)

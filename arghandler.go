@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/halworsen/grug/util"
 )
 
 var argRegexp *regexp.Regexp
@@ -47,7 +49,7 @@ func (g *GrugSession) populateTemplateValueMap(valueMap *map[string]interface{},
 			submatches := argRegexp.FindStringSubmatch(s)
 			// if it's a slice, add the slice
 			if submatches[2] == ":" {
-				lower, upper := getSliceBounds(submatches[1:], len(usrArgs))
+				lower, upper := util.GetSliceBounds(submatches[1:], len(usrArgs))
 				(*valueMap)[s] = usrArgs[lower:upper]
 				return s
 			}
@@ -72,7 +74,7 @@ func (g *GrugSession) populateTemplateValueMap(valueMap *map[string]interface{},
 }
 
 // StoreArg stores the given value in the given field in an arg store
-func (g *GrugSession) StoreArg(name string, val interface{}) error {
+func (g *GrugSession) storeArg(name string, val interface{}) error {
 	if !validateStoredName(name) {
 		return errors.New(fmt.Sprint(name, " is not a valid store name"))
 	}
@@ -82,12 +84,12 @@ func (g *GrugSession) StoreArg(name string, val interface{}) error {
 }
 
 // PurgeArgStore clears the arg store by recreating it
-func (g *GrugSession) PurgeArgStore() {
+func (g *GrugSession) purgeArgStore() {
 	g.ArgStore = make(map[string]interface{})
 }
 
 // ParseArgs parses templated values and inserts their respective actual values
-func (g *GrugSession) ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]interface{}, error) {
+func (g *GrugSession) parseArgs(cfgArgs []interface{}, usrArgs []string) ([]interface{}, error) {
 	finalArgs := make([]interface{}, 0)
 	templateValueMap := make(map[string]interface{})
 	for _, arg := range cfgArgs {
@@ -104,7 +106,7 @@ func (g *GrugSession) ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]inte
 		// directly pass args when the template appears alone
 		argAdder := func(match string) {
 			if len(match) > 3 && match[len(match)-3:] == "..." {
-				fMapSlice(templateValueMap[argAsStr], func(arg interface{}) {
+				util.FMapSlice(templateValueMap[argAsStr], func(arg interface{}) {
 					finalArgs = append(finalArgs, arg)
 				})
 			} else {
@@ -126,12 +128,12 @@ func (g *GrugSession) ParseArgs(cfgArgs []interface{}, usrArgs []string) ([]inte
 		stringReplacer := func(s string) string {
 			if len(s) > 3 && s[len(s)-3:] == "..." {
 				asStrSlice := make([]string, 0)
-				fMapSlice(templateValueMap[s], func(arg interface{}) {
+				util.FMapSlice(templateValueMap[s], func(arg interface{}) {
 					asStrSlice = append(asStrSlice, arg.(string))
 				})
 				return strings.Join(asStrSlice, " ")
 			}
-			return atostr(templateValueMap[s])
+			return util.Atostr(templateValueMap[s])
 		}
 
 		argAsStr = storedRegexp.ReplaceAllStringFunc(argAsStr, stringReplacer)

@@ -9,7 +9,7 @@ RUN go mod tidy
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 
-RUN go build -v -o ./grug ./main
+RUN go build -v -o ./grug ./discord
 
 FROM alpine:3.14.0
 

@@ -1,0 +1,7 @@
+name: grug
+invoker: "!g"
+verbose: false
+commands:
+  - "commands/help.yaml"
+  - "commands/listcommands.yaml"
+  - "commands/memecurator.yaml"

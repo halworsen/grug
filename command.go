@@ -15,7 +15,7 @@ type Command struct {
 
 // ConstructActivatorMap takes a list of commands and constructs a map from each command's activators to their respective command
 // Returns an error if two commands have conflicting activators
-func (g *GrugSession) ConstructActivatorMap() error {
+func (g *GrugSession) constructActivatorMap() error {
 	g.ActivatorMap = make(map[string]Command)
 	for _, c := range g.Commands {
 		for _, a := range c.Activators {

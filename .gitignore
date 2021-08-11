@@ -1,4 +1,7 @@
 grug.yaml
-commands
+commands/*.yaml
+!commands/help.yaml
+!commands/listcommands.yaml
+!commands/memecurator.yaml
 *.exe
 *.exe~

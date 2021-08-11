@@ -2,7 +2,7 @@
 
 ___
 
-Grug is a customizable Discord bot with composable and pluggable commands that are loaded as configurations at runtime.
+Grug is a customizable chat bot with composable and pluggable commands that are loaded as configurations at runtime.
 
 ## Grug commands
 

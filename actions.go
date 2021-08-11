@@ -1,14 +1,15 @@
 package grug
 
 import (
+	"context"
 	"errors"
 	"fmt"
 )
 
 // Action is any named task
 type Action struct {
-	Name string                                                  // Name of the action
-	Exec func(*GrugSession, ...interface{}) (interface{}, error) // Function that executes the action
+	Name string                                                                   // Name of the action
+	Exec func(*GrugSession, context.Context, ...interface{}) (interface{}, error) // Function that executes the action
 }
 
 // ActionActivator is a YAML-(un)marshallable struct for storing the name of and arguments for an action
@@ -35,16 +36,16 @@ type ConditionalAction struct {
 // AllActions holds all actions that can be used by Grug
 var AllActions []Action
 
-// ConstructActionMap takes a list of actions and constructs a map from each action's name to their respective action struct
-func (g *GrugSession) ConstructActionMap() {
+// constructActionMap takes a list of actions and constructs a map from each action's name to their respective action struct
+func (g *GrugSession) constructActionMap() {
 	g.ActionMap = make(map[string]Action)
 	for _, a := range g.Actions {
 		g.ActionMap[a.Name] = a
 	}
 }
 
-// PerformAction performs an action given an activator for the function and any user supplied arguments
-func (g *GrugSession) PerformAction(activator ActionActivator, userArgs []string) error {
+// performAction performs an action given an activator for the function and any user supplied arguments
+func (g *GrugSession) performAction(ctx context.Context, activator ActionActivator, userArgs []string) error {
 	actionName, args := activator.ActionName, activator.Arguments
 	if activator.Conditional != nil {
 		actionName = activator.Conditional.ActionName
@@ -57,17 +58,18 @@ func (g *GrugSession) PerformAction(activator ActionActivator, userArgs []string
 		return errors.New(fmt.Sprint("bad action name: ", activator.ActionName, ""))
 	}
 
-	args, err := g.ParseArgs(args, userArgs)
+	args, err := g.parseArgs(args, userArgs)
 	if err != nil {
 		return errors.New(fmt.Sprint("failed to parse arguments for action ", activator.ActionName, " - ", err))
 	}
 
-	result, err := action.Exec(g, args...)
+	// actually run the action
+	result, err := action.Exec(g, ctx, args...)
 	if err != nil {
 		// The step failed, so perform the failure action sequence
 		if activator.FailurePlan != nil {
 			for fStep, newActivator := range *activator.FailurePlan {
-				err := g.PerformAction(newActivator, userArgs)
+				err := g.performAction(ctx, newActivator, userArgs)
 				if err != nil {
 					g.Log(logError, fmt.Sprint("Failed to execute failure step ", fStep, " - ", err))
 				}
@@ -79,7 +81,7 @@ func (g *GrugSession) PerformAction(activator ActionActivator, userArgs []string
 	if activator.Conditional == nil {
 		// Store the result of this step
 		if activator.Store != "" {
-			err = g.StoreArg(activator.Store, result)
+			err = g.storeArg(activator.Store, result)
 			if err != nil {
 				return errors.New(fmt.Sprint("failed to store result of action ", activator.ActionName, " - ", err))
 			}
@@ -100,7 +102,7 @@ func (g *GrugSession) PerformAction(activator ActionActivator, userArgs []string
 
 		// It's okay to have empty action sequences in conditionals
 		for _, newActivator := range newSeq {
-			err := g.PerformAction(newActivator, userArgs)
+			err := g.performAction(ctx, newActivator, userArgs)
 			if err != nil {
 				return err
 			}

@@ -1,5 +1,5 @@
 name: "Meme Curation"
-desc: "Rate the latest meme to be posted.\nHighly ranked memes are automatically posted to the vault."
+desc: "{rate|curate} <score>\nRate the latest meme to be posted.\nHighly ranked memes are automatically posted to the vault."
 activators:
   - "rate"
   - "curate"

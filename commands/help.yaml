@@ -1,5 +1,5 @@
 name: "Help"
-desc: "Get help with commands"
+desc: "help {help|?} <commandname>\nGet help with commands"
 activators:
   - "help"
   - "?"

@@ -1,4 +1,4 @@
-package grug
+package util
 
 import (
 	"fmt"
@@ -8,12 +8,12 @@ import (
 )
 
 // anything to string
-func atostr(a interface{}) string {
+func Atostr(a interface{}) string {
 	return fmt.Sprintf("%v", a)
 }
 
 // Applies a function to every element of a value assumed to be a slice
-func fMapSlice(val interface{}, mapFunc func(interface{})) {
+func FMapSlice(val interface{}, mapFunc func(interface{})) {
 	reflectionVal := reflect.ValueOf(val)
 	if reflectionVal.Kind() == reflect.Slice || reflectionVal.Kind() == reflect.Array {
 		for i := 0; i < reflectionVal.Len(); i++ {
@@ -23,7 +23,7 @@ func fMapSlice(val interface{}, mapFunc func(interface{})) {
 }
 
 // Given an array of the form ["lower" ":" "upper"], returns the lower/upper bounds as ints
-func getSliceBounds(slice []string, max int) (int, int) {
+func GetSliceBounds(slice []string, max int) (int, int) {
 	lower, upper := 0, max
 
 	if len(slice) < 3 {
@@ -59,11 +59,11 @@ func getSliceBounds(slice []string, max int) (int, int) {
 
 // fieldAccess accesses fields of an object according to a plan
 // Supports both indexing and named access. E.g. FieldA.0.B would access args[0].FieldA[0].B
-func fieldAccess(object interface{}, accessPattern string) (interface{}, error) {
+func FieldAccess(object interface{}, accessPattern string) (interface{}, error) {
 	if accessPattern == "." {
 		return object, nil
 	}
-	indexPlan := strings.Split(atostr(accessPattern), ".")
+	indexPlan := strings.Split(Atostr(accessPattern), ".")
 
 	var value interface{}
 	for n, field := range indexPlan {

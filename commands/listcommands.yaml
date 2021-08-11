@@ -1,0 +1,12 @@
+name: "Command list"
+desc: "List all available commands"
+activators:
+  - "commandlist"
+  - "clist"
+  - "commands"
+plan:
+  - action: GetCommandList
+    store: commandList
+  - action: Reply
+    args:
+      - "!commandList"
