@@ -1,5 +1,4 @@
 name: grug
-token: yourbottokenhere
 invoker: "!g"
 commands:
   - "/etc/grug/commands/help.yaml"

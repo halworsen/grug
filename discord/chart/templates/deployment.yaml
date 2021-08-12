@@ -35,6 +35,14 @@ spec:
             httpGet:
               path: /health
               port: http
+          env:
+            - name: "GRUG_CONFIG_FILE"
+              value: "/etc/grug/grug.yaml"
+            - name: "GRUG_DISCORD_TOKEN"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: "DISCORD_BOT_TOKEN"
       volumes:
         - name: {{ .Release.Name }}-config-volume
           secret:

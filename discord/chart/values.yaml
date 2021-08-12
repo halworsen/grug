@@ -3,6 +3,8 @@ image:
   tag: ""
   pullPolicy: IfNotPresent
 
+discordBotToken: ""
+
 config:
   masterConfig: "grugconfig/grug.yaml"
   commands: "grugconfig/commands/"

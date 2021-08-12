@@ -1,3 +1,4 @@
+# run from the root folder of grug
 FROM golang:1.16-buster AS build
 
 WORKDIR /go/src/grug
