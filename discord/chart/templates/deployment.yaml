@@ -45,8 +45,8 @@ spec:
                   key: "DISCORD_BOT_TOKEN"
       volumes:
         - name: {{ .Release.Name }}-config-volume
-          secret:
-            secretName: {{ .Release.Name }}-master-config
+          configMap:
+            name: {{ .Release.Name }}-grug-config
         - name: {{ .Release.Name }}-command-volume
           configMap:
             name: {{ .Release.Name }}-commands
