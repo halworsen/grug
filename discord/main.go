@@ -35,12 +35,13 @@ func main() {
 	if err != nil {
 		log.Fatalln("[ERROR] Failed to create Discord session -", err)
 	}
+	defer session.Close()
 	session.AddHandler(discordMsgHandler)
 
 	// Start listening for commands
 	err = session.Open()
 	if err != nil {
-		log.Fatalln("[ERROR] Failed to open connection -", err)
+		log.Fatalln("[ERROR] Failed to open Discord session -", err)
 	}
 
 	log.Println("[INFO] Grug is now running (CTRL-C to exit)")

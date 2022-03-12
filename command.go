@@ -7,6 +7,7 @@ import (
 
 // Command represents an invokable Grug command and holds its activators and execution plan
 type Command struct {
+	ConfigPath  string                             // Path to the config file of this command
 	Name        string         `yaml:"name"`       // Descriptive name of the command
 	Description string         `yaml:"desc"`       // Description of the command
 	Activators  []string       `yaml:"activators"` // A list of ways to invoke the command

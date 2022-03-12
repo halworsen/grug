@@ -95,5 +95,9 @@ func (g *GrugSession) New(cfgPath string) {
 	g.Actions = AllActions
 	g.constructActionMap()
 
+	if g.Config.LiveReload {
+		g.SetupLiveReloadWatcher()
+	}
+
 	g.Log(logInfo, "Grug session ready")
 }
